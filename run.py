@@ -24,6 +24,38 @@ def add_task(tasks):
 
     return tasks
 
+def list_tasks(tasks):
+    high_priority = []
+    medium_priority = []
+    low_priority = []
+    
+    print('Here your tasks order by priority:')
+    
+    for p, v in enumerate(tasks, start=1):
+        if v.get('priority') == 'high':
+            high_priority.append(v)
+        elif v.get('priority') == 'medium':  # Correção aqui
+            medium_priority.append(v) 
+        elif v.get('priority') == 'low':
+            low_priority.append(v)
+    
+    texto = "Task: {name}, Due Date: {due_date}, Priority: {priority}, Category: {category}, Status: {status}, Completion Date: {completion_date}"
+
+    for p, v in enumerate(high_priority):
+        print(f'High Priority Task List: {texto.format(**v)}')
+        
+    for p, v in enumerate(medium_priority):
+        print(f'Medium Priority Task List: {texto.format(**v)}')
+        
+    for p, v in enumerate(low_priority):
+        print(f'Low Priority Task List: {texto.format(**v)}')
+
+
 def main():
+    print("Welcome to your TaskManager Data Automation")
     tasks = []
-    print("Welcome to your TaskManager Data Automation") 
+    add_task(tasks)
+    list_tasks(tasks)
+
+    
+main() 
