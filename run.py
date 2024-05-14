@@ -1,4 +1,4 @@
-def add_task(tasks):
+def add_task(task):
     name = input('Enter the task name: ')
     due_date = input('Enter the due date (YYYY-MM-DD): ')
     priority = input('Enter the priority (low, medium, high): ')
@@ -18,11 +18,19 @@ def add_task(tasks):
         'assignee': assignee,
         'completion_date': completion_date
     }
-    
-    tasks.append(task)
-    print('Task successfully inserted')
+    personal=[]
+    business=[]
 
-    return tasks
+    if task['category'] == 'P':
+        personal.append(task)
+    elif task['category'] == 'B':
+        business.append(task)
+        print('Task successfully inserted')
+    else:
+        return False
+
+
+    return task
 
 def list_tasks(tasks):
     high_priority = []
