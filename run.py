@@ -1,4 +1,4 @@
-def add_task(task):
+def add_task():
     name = input('Enter the task name: ')
     due_date = input('Enter the due date (YYYY-MM-DD): ')
     priority = input('Enter the priority (low, medium, high): ')
@@ -23,10 +23,12 @@ def add_task(task):
 
     if task['category'] == 'P':
         personal.append(task)
+        print('Task successfully inserted into Personal category')
     elif task['category'] == 'B':
         business.append(task)
-        print('Task successfully inserted')
+        print('Task successfully inserted into Business category')    
     else:
+        print('Invalid category')
         return False
 
 
@@ -58,12 +60,14 @@ def list_tasks(tasks):
     for p, v in enumerate(low_priority):
         print(f'Low Priority Task List: {texto.format(**v)}')
 
+#def change_task_status(tasks):
 
 def main():
-    print("Welcome to your TaskManager Data Automation")
     tasks = []
     add_task(tasks)
     list_tasks(tasks)
 
-    
+
+
+print("Welcome to your TaskManager Data Automation")    
 main() 
