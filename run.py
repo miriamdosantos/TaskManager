@@ -84,6 +84,39 @@ def validate_category():
         return None
 
 
+'''
+validate description
+'''
+def validate_description():
+    try:
+        description = input('Enter the description: (maximum 20 characters, press Enter to skip)')
+        if description == "":
+            return None  # Retorna None se o usuário não fornecer uma descrição
+        elif len(description) > 20:
+            raise ValueError('Exceeded the input. Maximum characters allowed: 20')
+        return description
+    except ValueError as e:
+            print(f'Invalid input: {e}')
+            return None
+
+
+'''
+status
+'''
+def validate_status():
+    try:
+        status = input('Enter the task status : C - (Complete); P - (Pending);  IP - (In Progress): ').upper()
+        if status not in ['C', 'P','IP' ]:
+            raise ValueError('Status should be C - (Complete); P - (Pending);  IP - (In Progress)')
+        return status
+    except ValueError as e:
+            print(f'Invalid input: {e}')
+            return None
+
+
+
+
+
          
 
 
