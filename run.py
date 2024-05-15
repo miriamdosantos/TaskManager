@@ -118,9 +118,9 @@ def remove_task(tasks):
             break
     
 # Login, verify user
-def load_user_data():
+def load_user_data(file_path):
     try:
-        with open('users.json', 'r') as file:
+        with open(file_path, 'r') as file:
             user_data = json.load(file)
     except FileNotFoundError:
         user_data = {}  # Se o arquivo não existe, comece com um dicionário vazio
@@ -161,7 +161,14 @@ def create_account():
                     print("Account created successfully! You are now logged in.")
                     return  # Sai da função após criar a conta e fazer login
 
-               
+
+def save_user_data(user_data, file_path):
+    # Abre o arquivo especificado em modo de escrita ('w')
+    with open(file_path, 'w') as file:
+        # Salva os dados do usuário (user_data) no arquivo em formato JSON
+        json.dump(user_data, file)
+
+                
 
 
 
