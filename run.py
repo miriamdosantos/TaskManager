@@ -1,4 +1,5 @@
 import json #import json to transfor the data in JSON format, and can manipulate it
+from datetime import datetime
 
 
 
@@ -38,6 +39,30 @@ def add_task():
 
 
     return task
+
+#validate date inputs
+def validate_name(name):
+    try:
+        name = input('Enter the task name: ')
+        if not name.isalpha():
+            raise ValueError("Invalid name. Name should only contain alphabetic characters.")
+        return name
+    except ValueError as e:
+        print(e)
+        return None
+    
+def validate_date():
+      try:
+            due_date_str = input("Enter the due date (DD-MM-YYYY): ")
+            due_date = datetime.strptime(due_date_str, "%d-%m-%Y")
+            return due_date.strftime("%d-%m-%Y")  # Retorna a data formatada
+      except ValueError as e:
+            print(e)
+            print("Invalid date format. Please enter the date in the format DD-MM-YYYY.")
+
+
+        
+
 
 def list_tasks(tasks):
     high_priority = []
