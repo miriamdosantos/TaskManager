@@ -61,6 +61,32 @@ def validate_date():
             print("Invalid date format. Please enter the date in the format DD-MM-YYYY.")
 
 
+
+def validate_priority():
+    try:
+            priority = input('Enter the priority (low, medium, high): ').lower()
+            if priority not in ['low', 'medium', 'high']:
+                raise ValueError('Invalid option. Priority should be "low", "medium", or "high".')
+            return priority
+    except ValueError as e:
+            print(f'Invalid input: {e}')
+
+
+
+def validate_category():
+    try: 
+        category = input('Enter the category: P - (Personal), B - (Business)')
+        if len(category) != 1 or category not in ['P', 'B']:
+            raise ValueError('Category should be either "P" for Personal or "B" for Business.')
+        return category 
+    except ValueError as e:
+        print(f'Invalid option {e} please try again.\n')
+        return None
+
+
+         
+
+
         
 
 
