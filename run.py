@@ -140,7 +140,31 @@ def login_user():
         print("User not found.")
     return False
 
-        
+
+def create_account():
+    while True:
+        user_data = load_user_data()
+        new_username = input('Please choose a username for your account:').lower()
+        if new_username in user_data:
+            print('Sorry, this username is already taken. Please choose another one.')
+            continue  # Volta ao início do loop externo para pedir um novo nome de usuário
+        else: 
+            print("Great! This username is available.")
+            while True:
+                new_userpassword = input('Please enter your password. It should contain at least 6 characters:')
+                if len(new_userpassword) < 6:
+                    print("Password should contain at least 6 characters. Please try again.")
+                    continue  # Volta ao início do loop interno para pedir uma nova senha
+                else:
+                    user_data.update({new_username: {"password": new_userpassword}})                    
+                    #save_user_data(user_data)
+                    print("Account created successfully! You are now logged in.")
+                    return  # Sai da função após criar a conta e fazer login
+
+               
+
+
+
         
 
 
