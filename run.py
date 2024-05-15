@@ -1,3 +1,8 @@
+import json #import json to transfor the data in JSON format, and can manipulate it
+
+
+
+
 def add_task():
     name = input('Enter the task name: ')
     due_date = input('Enter the due date (YYYY-MM-DD): ')
@@ -112,6 +117,28 @@ def remove_task(tasks):
         if update_another == 'N':
             break
     
+# Login, verify user
+def load_user_data():
+    try:
+        with open('users.json', 'r') as file:
+            user_data = json.load(file)
+    except FileNotFoundError:
+        user_data = {}  # Se o arquivo não existe, comece com um dicionário vazio
+    return user_data
+
+def login_user():
+    user_data = load_user_data()
+    user_name = input("Enter your UserName:")
+    password = input("Enter your password: ")
+    if user_name in user_data:
+        if user_data[user_name]['password'] == password:
+            print("Authentication successful!")
+            return True
+        else:
+            print("Incorrect password.")
+    else:
+        print("User not found.")
+    return False
 
         
         
