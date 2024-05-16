@@ -5,40 +5,39 @@ from datetime import datetime
 
 
 def add_task():
-    name = input('Enter the task name: ')
-    due_date = input('Enter the due date (YYYY-MM-DD): ')
-    priority = input('Enter the priority (low, medium, high): ')
-    category = input('Enter the category: P - (Personal), B - (Business)')
-    description = input('Enter the description: ')
-    status = input('Enter the status (C - complete, P - pending, I - in progress): ')
-    assignee = input('Enter the assignee: ')
-    completion_date = input('Enter the completion date (YYYY-MM-DD): ')
+    while True:
+        name = validate_name()
+        due_date = validate_date()
+        priority = validate_priority()
+        category = validate_category()
+        description = validate_description()
+        status = validate_status()
+        
+        task = {
+            'name': name,
+            'due_date': due_date,
+            'priority': priority,
+            'category': category,
+            'description': description,
+            'status': status,
+            
+        }
+
+        personal = []
+        business = []
+
+        if task['category'] == 'P':
+            personal.append(task)
+            print('Task successfully inserted into Personal category')
+        elif task['category'] == 'B':
+            business.append(task)
+            print('Task successfully inserted into Business category')    
+        else:
+            print('Invalid category')
+            continue  # Volta ao início do loop externo para solicitar uma nova entrada
+
+        return task
     
-    task = {
-        'name': name,
-        'due_date': due_date,
-        'priority': priority,
-        'category': category,
-        'description': description,
-        'status': status,
-        'assignee': assignee,
-        'completion_date': completion_date
-    }
-    personal=[]
-    business=[]
-
-    if task['category'] == 'P':
-        personal.append(task)
-        print('Task successfully inserted into Personal category')
-    elif task['category'] == 'B':
-        business.append(task)
-        print('Task successfully inserted into Business category')    
-    else:
-        print('Invalid category')
-        return False
-
-
-    return task
 
 #validate date inputs
 def validate_name(name):
@@ -138,7 +137,7 @@ def list_tasks(tasks):
         elif v.get('priority') == 'low':
             low_priority.append(v)
     
-    texto = " ID : {p} Task: {name}, Due Date: {due_date}, Priority: {priority}, Category: {category}, Status: {status}, Completion Date: {completion_date}"
+    texto = " ID : {p} Task: {name}, Due Date: {due_date}, Priority: {priority}, Category: {category}, Description: {description} Status: {status}"
 
     for p, v in enumerate(high_priority):
         print(f'High Priority Task List: {texto.format(**v)}')
