@@ -187,6 +187,7 @@ def list_tasks(tasks, category):
         print(task)
 
     print('Sort Options')
+    
 # Loop do menu de opções
     while True:
         print("Sort Options:")
@@ -229,6 +230,14 @@ def list_tasks(tasks, category):
         elif sort_option == 4:
             print("Exiting the program.")
             break  # Sai do loop do menu
+
+def view_all_tasks(tasks):
+    print("All Tasks:")
+    print("-----------")
+    for category in ['P', 'B']:  # Itera sobre todas as categorias
+        list_tasks(tasks, category)
+
+    
 
 
 def print_task_details(task):
@@ -389,4 +398,49 @@ def save_user_data(user_data, file_path):
         
         
 print("Welcome to your TaskManager Data Automation")    
+def main():
+    login_user()
+    became_user = input("Ready to start managing your tasks more efficiently?\n"
+                        "If you're not part of our community yet, you're just a step away from joining!\n"
+                        "You can easily sign up now to start organizing your tasks. Are you ready to join us? (Y/N)\n").upper()
+    if became_user == 'Y':
+        create_account()
+    print("Alright, you're all set! Now, let's dive into Task Manager and explore your options.")
+    
+    while True:
+        print('Main Menu')
+        print("-----------")
+        print("1. Add new Task")
+        print("2. List All Tasks")
+        print("3. List Tasks by Category (type P for Personal, B for Business)")
+        print("4. Update Task")
+        print("5. Delete Task(s) (select ID from menu item 2)")
+        print("6. Clear screen")
+        print("7. Exit application")
+        
+        menu_option = int(input("Please, select option between 1 and 7: "))
+        
+        if menu_option == 1:
+            add_task()
+        elif menu_option == 2:
+            view_all_tasks()
+        elif menu_option == 3:
+            category = input("Enter category (P for Personal, B for Business): ").upper()
+            if category in ['P', 'B']:
+                list_tasks(category)
+            else:
+                print("Invalid category. Please enter P or B.")
+        elif menu_option == 4:
+            update_status_task()
+        elif menu_option == 5:
+            remove_task()
+        elif menu_option == 6:
+            pass  # Implemente a função clear_screen() se desejar
+        elif menu_option == 7:
+            print("Exiting the application.")
+            break
+        else:
+            print("Invalid option, please choose option between 1 and 7")
+
+
 
