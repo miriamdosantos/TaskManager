@@ -3,15 +3,36 @@ from datetime import datetime
 
 
 
+from datetime import datetime
 
 def add_task():
+    personal = []
+    business = []
+
     while True:
         name = validate_name()
+        if name is None:
+            break
+        
         due_date = validate_date()
+        if due_date is None:
+            break
+        
         priority = validate_priority()
+        if priority is None:
+            break
+        
         category = validate_category()
+        if category is None:
+            break
+        
         description = validate_description()
+        if description is None:
+            break
+        
         status = validate_status()
+        if status is None:
+            break
         
         task = {
             'name': name,
@@ -20,97 +41,111 @@ def add_task():
             'category': category,
             'description': description,
             'status': status,
-            
         }
 
-        personal = []
-        business = []
-
-        if task['category'] == 'P':
+        if category == 'P':
             personal.append(task)
             print('Task successfully inserted into Personal category')
-        elif task['category'] == 'B':
+        elif category == 'B':
             business.append(task)
             print('Task successfully inserted into Business category')    
         else:
             print('Invalid category')
             continue  # Volta ao início do loop externo para solicitar uma nova entrada
+        
+        try: 
+            option = input('Would you like to add more tasks? (Y/N)').upper()
+            if option not in ['Y', 'N']:
+                raise ValueError('Invalid input. Please answer: Y or N ')
+        except ValueError as e:
+             print(f'Error: {e}')
+        
+        if option == 'N':
+            break
 
-        return task
-    
+    return personal, business
 
-#validate date inputs
-def validate_name(name):
-    try:
-        name = input('Enter the task name: ')
-        if not name.isalpha():
-            raise ValueError("Invalid name. Name should only contain alphabetic characters.")
-        return name
-    except ValueError as e:
-        print(e)
-        return None
-    
+
+def validate_name():
+    while True:
+        try:
+            name = input('Enter the task name (or type "quit" to exit): ')
+            if name.lower() in ['quit', 'exit']:
+                return None
+            if not name.isalpha():
+                raise ValueError("Invalid name. Name should only contain alphabetic characters.")
+            return name
+        except ValueError as e:
+            print(f'Error: {e}')
+
+
 def validate_date():
-      try:
-            due_date_str = input("Enter the due date (DD-MM-YYYY): ")
+    while True:
+        try:
+            due_date_str = input("Enter the due date (DD-MM-YYYY) (or type 'quit' to exit): ")
+            if due_date_str.lower() in ['quit', 'exit']:
+                return None
             due_date = datetime.strptime(due_date_str, "%d-%m-%Y")
             return due_date.strftime("%d-%m-%Y")  # Retorna a data formatada
-      except ValueError as e:
-            print(e)
-            print("Invalid date format. Please enter the date in the format DD-MM-YYYY.")
-
+        except ValueError as e:
+            print(f'Error: {e}. Please enter the date in the format DD-MM-YYYY.')
 
 
 def validate_priority():
-    try:
-            priority = input('Enter the priority (low, medium, high): ').lower()
+    while True:
+        try:
+            priority = input('Enter the priority (low, medium, high) (or type "quit" to exit): ').lower()
+            if priority.lower() in ['quit', 'exit']:
+                return None
             if priority not in ['low', 'medium', 'high']:
                 raise ValueError('Invalid option. Priority should be "low", "medium", or "high".')
             return priority
-    except ValueError as e:
-            print(f'Invalid input: {e}')
-
+        except ValueError as e:
+            print(f'Error: {e}')
 
 
 def validate_category():
-    try: 
-        category = input('Enter the category: P - (Personal), B - (Business)')
-        if len(category) != 1 or category not in ['P', 'B']:
-            raise ValueError('Category should be either "P" for Personal or "B" for Business.')
-        return category 
-    except ValueError as e:
-        print(f'Invalid option {e} please try again.\n')
-        return None
+    while True:
+        try: 
+            category = input('Enter the category: P - (Personal), B - (Business) (or type "quit" to exit): ').upper()
+            if category.lower() in ['quit', 'exit']:
+                return None
+            if len(category) != 1 or category not in ['P', 'B']:
+                raise ValueError('Category should be either "P" for Personal or "B" for Business.')
+            return category 
+        except ValueError as e:
+            print(f'Error: {e}')
 
 
-'''
-validate description
-'''
 def validate_description():
-    try:
-        description = input('Enter the description: (maximum 20 characters, press Enter to skip)')
-        if description == "":
-            return None  # Retorna None se o usuário não fornecer uma descrição
-        elif len(description) > 20:
-            raise ValueError('Exceeded the input. Maximum characters allowed: 20')
-        return description
-    except ValueError as e:
-            print(f'Invalid input: {e}')
-            return None
+    while True:
+        try:
+            description = input('Enter the description: (maximum 20 characters, press Enter to skip) (or type "quit" to exit): ')
+            if description.lower() in ['quit', 'exit']:
+                return None
+            if len(description) > 20:
+                raise ValueError('Exceeded the input. Maximum characters allowed: 20')
+            if not description.strip():
+                return None  # Retorna None se o usuário não fornecer uma descrição
+            return description
+        except ValueError as e:
+            print(f'Error: {e}')
 
 
-'''
-status
-'''
 def validate_status():
-    try:
-        status = input('Enter the task status : C - (Complete); P - (Pending);  IP - (In Progress): ').upper()
-        if status not in ['C', 'P','IP' ]:
-            raise ValueError('Status should be C - (Complete); P - (Pending);  IP - (In Progress)')
-        return status
-    except ValueError as e:
-            print(f'Invalid input: {e}')
-            return None
+    while True:
+        try:
+            status = input('Enter the task status : C - (Complete); P - (Pending);  IP - (In Progress) (or type "quit" to exit): ').upper()
+            if status.lower() in ['quit', 'exit']:
+                return None
+            if status not in ['C', 'P', 'IP']:
+                raise ValueError('Status should be C - (Complete); P - (Pending);  IP - (In Progress)')
+            return status
+        except ValueError as e:
+            print(f'Error: {e}')
+
+
+
 
 
 
@@ -122,31 +157,110 @@ def validate_status():
         
 
 
-def list_tasks(tasks):
+def list_tasks(tasks, category):
+    # Crie listas vazias para cada categoria e prioridade
     high_priority = []
     medium_priority = []
     low_priority = []
     
-    print('Here your tasks order by priority:')
-    
-    for p, v in enumerate(tasks, start=1):
-        if v.get('priority') == 'high':
-            high_priority.append(v)
-        elif v.get('priority') == 'medium':  # Correção aqui
-            medium_priority.append(v) 
-        elif v.get('priority') == 'low':
-            low_priority.append(v)
-    
-    texto = " ID : {p} Task: {name}, Due Date: {due_date}, Priority: {priority}, Category: {category}, Description: {description} Status: {status}"
+    # Separe as tarefas por prioridade
+    for task in tasks:
+        if task['category'] == category:
+            if task['priority'] == 'high':
+                high_priority.append(task)
+            elif task['priority'] == 'medium':
+                medium_priority.append(task)
+            elif task['priority'] == 'low':
+                low_priority.append(task)
+                
+    # Exiba as tarefas
+    # Imprima as tarefas separadas por prioridade
+    print(f"{category.capitalize()} Tasks:")
+    print("High Priority:")
+    for task in high_priority:
+        print(task)
+    print("Medium Priority:")
+    for task in medium_priority:
+        print(task)
+    print("Low Priority:")
+    for task in low_priority:
+        print(task)
 
-    for p, v in enumerate(high_priority):
-        print(f'High Priority Task List: {texto.format(**v)}')
+    print('Sort Options')
+# Loop do menu de opções
+    while True:
+        print("Sort Options:")
+        print("1. By Due Date (closest first)")
+        print("2. By Due Date (farthest first)")
+        print("3. By Status")
+        print("4. Exit")
         
-    for p, v in enumerate(medium_priority):
-        print(f'Medium Priority Task List: {texto.format(**v)}')
+        # Entrada do usuário
+        try:
+            sort_option = int(input("Enter your choice: "))
+            if sort_option not in [1, 2, 3, 4]:
+                raise ValueError("Invalid choice. Please enter a number between 1 and 4.")
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
+            continue
         
-    for p, v in enumerate(low_priority):
-        print(f'Low Priority Task List: {texto.format(**v)}')
+        # Processamento da escolha do usuário
+        if sort_option == 1:
+            print('High Priority - Due Date:')
+            print_task_details(sort_by_due_date(high_priority))
+            print('Medium Priority - Due Date:')
+            print_task_details(sort_by_due_date(medium_priority))
+            print('Low Priority - Due Date:')
+            print_task_details(sort_by_due_date(low_priority))
+        elif sort_option == 2:
+            print('High Priority - Due Date:')
+            print_task_details(sort_by_due_date(high_priority, reverse=True))
+            print('Medium Priority - Due Date:')
+            print_task_details(sort_by_due_date(medium_priority, reverse=True))
+            print('Low Priority - Due Date:')
+            print_task_details(sort_by_due_date(low_priority, reverse=True))
+        elif sort_option == 3:
+            print('High Priority - Status:')
+            print_task_details(sort_by_status(high_priority))
+            print('Medium Priority - Status:')
+            print_task_details(sort_by_status(medium_priority))
+            print('Low Priority - Status:')
+            print_task_details(sort_by_status(low_priority))
+        elif sort_option == 4:
+            print("Exiting the program.")
+            break  # Sai do loop do menu
+
+
+def print_task_details(task):
+    # Função para imprimir os detalhes de uma tarefa
+    print(f"Name: {task['name']}")
+    print(f"Due Date: {task['due_date']}")
+    print(f"Priority: {task['priority']}")
+    print(f"Status: {task['status']}")
+    print(f"Description: {task['description']}")
+    print()
+    
+def sort_by_due_date(tasks, order):
+    tasks_sorted = sorted(tasks, key = due_date)
+    tasks_sorted_last = sorted(tasks, key = due_date ,reverse=True)    
+    for task in tasks:
+         due_date = task.get('due_date', 'Not found')
+         if order ==1:
+            return tasks_sorted 
+         elif order == 2:
+             return tasks_sorted_last
+            
+
+def sort_by_status(tasks):
+    for task in tasks:
+        status=task.get('status', 'Not found')
+        tasks_sorted = sorted(tasks,key=lambda x: x['stuatus'] == ['I','P','C'] )
+    return tasks_sorted
+
+        
+        
+
+
 
 def update_status_task(tasks):
     while True:
@@ -240,7 +354,7 @@ def create_account():
                     continue  # Volta ao início do loop interno para pedir uma nova senha
                 else:
                     user_data.update({new_username: {"password": new_userpassword}})                    
-                    #save_user_data(user_data)
+                    save_user_data(user_data)
                     print("Account created successfully! You are now logged in.")
                     return  # Sai da função após criar a conta e fazer login
 
