@@ -241,15 +241,27 @@ def print_task_details(task):
     print()
     
 def sort_by_due_date(tasks, order):
-    tasks_sorted = sorted(tasks, key = due_date)
-    tasks_sorted_last = sorted(tasks, key = due_date ,reverse=True)    
+    # Listas para armazenar as tarefas ordenadas
+    tasks_sorted = []
+    tasks_sorted_last = []
+    
+    # Itera sobre todas as tarefas
     for task in tasks:
-         due_date = task.get('due_date', 'Not found')
-         if order ==1:
-            return tasks_sorted 
-         elif order == 2:
-             return tasks_sorted_last
-            
+        # Obtém a data de vencimento da tarefa
+        due_date = task.get('due_date', 'Not found')
+        
+        # Adiciona a tarefa à lista de tarefas ordenadas com base na data de vencimento
+        if order == 1:
+            tasks_sorted.append(task)
+        elif order == 2:
+            tasks_sorted_last.append(task)
+    
+    # Ordena as listas de tarefas com base na data de vencimento
+    tasks_sorted = sorted(tasks_sorted, key=lambda x: x['due_date'])
+    tasks_sorted_last = sorted(tasks_sorted_last, key=lambda x: x['due_date'], reverse=True)
+
+    return tasks_sorted, tasks_sorted_last
+
 
 def sort_by_status(tasks):
     for task in tasks:
