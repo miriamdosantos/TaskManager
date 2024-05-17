@@ -264,10 +264,10 @@ def sort_by_due_date(tasks, order):
 
 
 def sort_by_status(tasks):
-    for task in tasks:
-        status=task.get('status', 'Not found')
-        tasks_sorted = sorted(tasks,key=lambda x: x['stuatus'] == ['I','P','C'] )
-    return tasks_sorted
+    # Ordena as tarefas com base no status, utilizando uma função lambda
+    sorted_tasks = sorted(tasks, key=lambda x: x['status'], reverse=True)
+    return sorted_tasks
+
 
         
         
