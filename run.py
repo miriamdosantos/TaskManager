@@ -222,9 +222,11 @@ def sort_by_due_date(user_tasks, category, reverse=False):
 def view_all_tasks(user_tasks):
     print("All Tasks:")
     print("-----------")
-    for category in ['P', 'B']:  # Itera sobre todas as categorias
-        list_tasks(user_tasks, category)
-
+    for i, task in enumerate(user_tasks['personal']):
+        print(f"{i + 1}. {task['description']} - {task['status']}")
+    print("Business Tasks:")
+    for i, task in enumerate(user_tasks['business']):
+        print(f"{i + 1}. {task['description']} - {task['status']}")
     
 
 
@@ -317,17 +319,16 @@ def remove_task(user_task):
 
     
 # Login, verify user
-def load_user_data():
-    try:
-        with open('users_data.json', 'r') as file:
-            # Verifica se o arquivo está vazio
-            if os.stat('users_data.json').st_size == 0:
-                return {}  # Retorna um dicionário vazio se o arquivo estiver vazio
-            else:
+def load_user_data(file_path):
+    user_data = {}
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, 'r') as file:
                 user_data = json.load(file)
-    except FileNotFoundError:
-        user_data = {}
+        except (FileNotFoundError, json.JSONDecodeError):
+            print(f"Error loading {file_path}. Starting with an empty user data.")
     return user_data
+
 
 def login_user(user_data):
     username = input("Enter your username: ").lower()
@@ -355,13 +356,13 @@ def create_account(user_data):
                     continue
                 else:
                     user_data[new_username] = {'password': new_password, 'tasks': {'personal': [], 'business': []}}
-                    save_user_data(user_data)
+                    save_user_data(user_data, 'users_data.json')
                     print("Account created successfully! You are now logged in.")
                     return
 
 def save_user_data(user_data, file_path):
     # Abre o arquivo especificado em modo de escrita ('w')
-    with open('users_data.json', 'w') as file:
+    with open(file_path, 'w') as file:
         # Salva os dados do usuário (user_data) no arquivo em formato JSON
         json.dump(user_data, file)
 
@@ -380,7 +381,8 @@ def save_user_data(user_data, file_path):
 # As funções restantes estão aqui, sem modificações
 
 def main():
-    user_data = load_user_data()
+    file_path = 'users_data.json'
+    user_data = load_user_data(file_path)
     username = login_user(user_data)
     if not username:
         became_user = input("Ready to start managing your tasks more efficiently?\n"
@@ -396,7 +398,7 @@ def main():
         print("-----------")
         print("1. Add new Task")
         print("2. List All Tasks")
-        print("3. List Tasks by Category (type P for Personal, B for Business)")
+        print("3. List Tasks by Category : 'Personal',  'Business')")
         print("4. Update Task")
         print("5. Delete Task(s) (select ID from menu item 2)")
         print("6. Clear screen")
@@ -409,7 +411,7 @@ def main():
         elif menu_option == 2:
             view_all_tasks(user_data)
         elif menu_option == 3:
-            category = input("Enter category (P for Personal, B for Business): ").upper()
+            category = input("Enter category (P - for Personal, B - for Business): ").upper()
             if category in ['P', 'B']:
                 list_tasks(user_data[username]['tasks'][category])
             else:
