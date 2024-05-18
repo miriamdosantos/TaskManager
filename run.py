@@ -1,14 +1,11 @@
 import json #import json to transfor the data in JSON format, and can manipulate it
 from datetime import datetime
-
+import os
 
 
 from datetime import datetime
 
-def add_task():
-    personal = []
-    business = []
-
+def add_task(username, user_data):
     while True:
         name = validate_name()
         if name is None:
@@ -44,10 +41,10 @@ def add_task():
         }
 
         if category == 'P':
-            personal.append(task)
+            user_data[username]['tasks']['personal'].append(task)
             print('Task successfully inserted into Personal category')
         elif category == 'B':
-            business.append(task)
+            user_data[username]['tasks']['business'].append(task)
             print('Task successfully inserted into Business category')    
         else:
             print('Invalid category')
@@ -62,9 +59,6 @@ def add_task():
         
         if option == 'N':
             break
-
-    return personal, business
-
 
 def validate_name():
     while True:
@@ -157,44 +151,39 @@ def validate_status():
         
 
 
-def list_tasks(tasks, category):
-    # Crie listas vazias para cada categoria e prioridade
+def list_tasks(user_tasks, category):
+    # Crie listas vazias para cada prioridade
     high_priority = []
     medium_priority = []
     low_priority = []
     
+    tasks = user_tasks[category]
+    # Separe as tarefas por prioridade dentro da categoria especificada
     # Separe as tarefas por prioridade
     for task in tasks:
-        if task['category'] == category:
-            if task['priority'] == 'high':
-                high_priority.append(task)
-            elif task['priority'] == 'medium':
-                medium_priority.append(task)
-            elif task['priority'] == 'low':
-                low_priority.append(task)
+        if task['priority'] == 'high':
+            high_priority.append(task)
+        elif task['priority'] == 'medium':
+            medium_priority.append(task)
+        elif task['priority'] == 'low':
+            low_priority.append(task)
                 
-    # Exiba as tarefas
     # Imprima as tarefas separadas por prioridade
     print(f"{category.capitalize()} Tasks:")
     print("High Priority:")
-    for task in high_priority:
-        print(task)
+    print_task_details(high_priority)
     print("Medium Priority:")
-    for task in medium_priority:
-        print(task)
+    print_task_details(medium_priority)
     print("Low Priority:")
-    for task in low_priority:
-        print(task)
+    print_task_details(low_priority)
 
-    print('Sort Options')
-    
-# Loop do menu de opções
+    # Opções de ordenação
     while True:
         print("Sort Options:")
         print("1. By Due Date (closest first)")
         print("2. By Due Date (farthest first)")
         print("3. By Status")
-        print("4. Exit")
+        print("4. Back to Main Menu")
         
         # Entrada do usuário
         try:
@@ -207,35 +196,34 @@ def list_tasks(tasks, category):
         
         # Processamento da escolha do usuário
         if sort_option == 1:
-            print('High Priority - Due Date:')
-            print_task_details(sort_by_due_date(high_priority))
-            print('Medium Priority - Due Date:')
-            print_task_details(sort_by_due_date(medium_priority))
-            print('Low Priority - Due Date:')
-            print_task_details(sort_by_due_date(low_priority))
+            print_task_details(sort_by_due_date(user_tasks, category))
         elif sort_option == 2:
-            print('High Priority - Due Date:')
-            print_task_details(sort_by_due_date(high_priority, reverse=True))
-            print('Medium Priority - Due Date:')
-            print_task_details(sort_by_due_date(medium_priority, reverse=True))
-            print('Low Priority - Due Date:')
-            print_task_details(sort_by_due_date(low_priority, reverse=True))
+            print_task_details(sort_by_due_date(user_tasks, category, reverse=True))
         elif sort_option == 3:
-            print('High Priority - Status:')
-            print_task_details(sort_by_status(high_priority))
-            print('Medium Priority - Status:')
-            print_task_details(sort_by_status(medium_priority))
-            print('Low Priority - Status:')
-            print_task_details(sort_by_status(low_priority))
+            print_task_details(sort_by_status(user_tasks[category]))
         elif sort_option == 4:
-            print("Exiting the program.")
-            break  # Sai do loop do menu
+            print("Returning to the Main Menu.")
+            break  # Volta para o menu principal
 
-def view_all_tasks(tasks):
+
+def sort_by_due_date(user_tasks, category, reverse=False):
+    # Lista para armazenar as tarefas ordenadas
+    tasks_sorted = []
+
+    tasks = user_tasks[category]  # Seleciona as tarefas na categoria especificada
+    
+    # Ordena as tarefas com base na data de vencimento
+    tasks_sorted = sorted(tasks, key=lambda x: x['due_date'], reverse=reverse)
+
+    return tasks_sorted
+
+
+
+def view_all_tasks(user_tasks):
     print("All Tasks:")
     print("-----------")
     for category in ['P', 'B']:  # Itera sobre todas as categorias
-        list_tasks(tasks, category)
+        list_tasks(user_tasks, category)
 
     
 
@@ -249,30 +237,11 @@ def print_task_details(task):
     print(f"Description: {task['description']}")
     print()
     
-def sort_by_due_date(tasks, order):
-    # Listas para armazenar as tarefas ordenadas
-    tasks_sorted = []
-    tasks_sorted_last = []
-    
-    # Itera sobre todas as tarefas
-    for task in tasks:
-        # Obtém a data de vencimento da tarefa
-        due_date = task.get('due_date', 'Not found')
-        
-        # Adiciona a tarefa à lista de tarefas ordenadas com base na data de vencimento
-        if order == 1:
-            tasks_sorted.append(task)
-        elif order == 2:
-            tasks_sorted_last.append(task)
-    
-    # Ordena as listas de tarefas com base na data de vencimento
-    tasks_sorted = sorted(tasks_sorted, key=lambda x: x['due_date'])
-    tasks_sorted_last = sorted(tasks_sorted_last, key=lambda x: x['due_date'], reverse=True)
-
-    return tasks_sorted, tasks_sorted_last
 
 
-def sort_by_status(tasks):
+
+def sort_by_status(user_task):
+    tasks = user_task
     # Ordena as tarefas com base no status, utilizando uma função lambda
     sorted_tasks = sorted(tasks, key=lambda x: x['status'], reverse=True)
     return sorted_tasks
@@ -283,13 +252,16 @@ def sort_by_status(tasks):
 
 
 
-def update_status_task(tasks):
+def update_status_task(user_task):
+    tasks = user_task['tasks']
     while True:
-        list_tasks(tasks)
+        category = input("Enter the category (P for Personal, B for Business): ").upper()
+        list_tasks(user_task, category)
+
         id = int(input("Enter the ID of the task to update the status: "))
         
         found_task = False
-        for p, v in enumerate(tasks):
+        for p, v in enumerate(tasks[category]):
             if id == p:
                 v['status'] = input('Enter the new task status ("complete", "in progress", "pending"): ').lower()
                 print("Task successfully updated")
@@ -310,21 +282,29 @@ def update_status_task(tasks):
         if update_another == 'N':
             break  # Sai do loop externo se o usuário não quiser atualizar mais tarefas
 
-def remove_task(tasks):
+def remove_task(user_task):
+    tasks = user_task['tasks']
     while True:
-        list_tasks(tasks)
+        category = input("Enter the category (P for Personal, B for Business): ").upper()
+        list_tasks(user_task, category)
         found_task = False
         id = int(input("Enter the ID of the task to delete: "))
-        for p,v in enumerate (tasks):
-            if id == p:
-                del tasks[p]
-                print('Task successfuly removed')
-                found_task = True
-                break
-            
-        if not found_task:
+        
+        # Verifica se a categoria é válida
+        if category not in tasks:
+            print("Invalid category.")
+            continue
+        
+        # Verifica se o ID da tarefa está dentro do intervalo de índices da lista de tarefas
+        if id < 0 or id >= len(tasks[category]):
             print('Invalid ID option. Please enter a valid ID.')
             continue
+
+        # Remove a tarefa da lista de tarefas da categoria especificada
+        del tasks[category][id]
+        print('Task successfully removed')
+        found_task = True
+
         while True:
             update_another = input("Would you like to delete another task? (Y/N): ").upper()
             if update_another in ('Y', 'N'):
@@ -334,55 +314,54 @@ def remove_task(tasks):
         
         if update_another == 'N':
             break
+
     
 # Login, verify user
-def load_user_data(file_path):
+def load_user_data():
     try:
-        with open(file_path, 'r') as file:
-            user_data = json.load(file)
+        with open('users_data.json', 'r') as file:
+            # Verifica se o arquivo está vazio
+            if os.stat('users_data.json').st_size == 0:
+                return {}  # Retorna um dicionário vazio se o arquivo estiver vazio
+            else:
+                user_data = json.load(file)
     except FileNotFoundError:
-        user_data = {}  # Se o arquivo não existe, comece com um dicionário vazio
+        user_data = {}
     return user_data
 
-def login_user():
-    user_data = load_user_data()
-    user_name = input("Enter your UserName:")
+def login_user(user_data):
+    username = input("Enter your username: ").lower()
     password = input("Enter your password: ")
-    if user_name in user_data:
-        if user_data[user_name]['password'] == password:
-            print("Authentication successful!")
-            return True
-        else:
-            print("Incorrect password.")
+    if username in user_data and user_data[username]['password'] == password:
+        return username
     else:
-        print("User not found.")
-    return False
+        print("Invalid username or password.")
+        return None
 
 
-def create_account():
+
+def create_account(user_data):
     while True:
-        user_data = load_user_data()
         new_username = input('Please choose a username for your account:').lower()
         if new_username in user_data:
             print('Sorry, this username is already taken. Please choose another one.')
-            continue  # Volta ao início do loop externo para pedir um novo nome de usuário
+            continue
         else: 
             print("Great! This username is available.")
             while True:
-                new_userpassword = input('Please enter your password. It should contain at least 6 characters:')
-                if len(new_userpassword) < 6:
+                new_password = input('Please enter your password. It should contain at least 6 characters:')
+                if len(new_password) < 6:
                     print("Password should contain at least 6 characters. Please try again.")
-                    continue  # Volta ao início do loop interno para pedir uma nova senha
+                    continue
                 else:
-                    user_data.update({new_username: {"password": new_userpassword}})                    
+                    user_data[new_username] = {'password': new_password, 'tasks': {'personal': [], 'business': []}}
                     save_user_data(user_data)
                     print("Account created successfully! You are now logged in.")
-                    return  # Sai da função após criar a conta e fazer login
-
+                    return
 
 def save_user_data(user_data, file_path):
     # Abre o arquivo especificado em modo de escrita ('w')
-    with open(file_path, 'w') as file:
+    with open('users_data.json', 'w') as file:
         # Salva os dados do usuário (user_data) no arquivo em formato JSON
         json.dump(user_data, file)
 
@@ -397,15 +376,20 @@ def save_user_data(user_data, file_path):
         
         
         
-print("Welcome to your TaskManager Data Automation")    
+ 
+# As funções restantes estão aqui, sem modificações
+
 def main():
-    login_user()
-    became_user = input("Ready to start managing your tasks more efficiently?\n"
-                        "If you're not part of our community yet, you're just a step away from joining!\n"
+    user_data = load_user_data()
+    username = login_user(user_data)
+    if not username:
+        became_user = input("Ready to start managing your tasks more efficiently?\n"
                         "You can easily sign up now to start organizing your tasks. Are you ready to join us? (Y/N)\n").upper()
-    if became_user == 'Y':
-        create_account()
-    print("Alright, you're all set! Now, let's dive into Task Manager and explore your options.")
+        if became_user == 'Y':
+           create_account(user_data) 
+
+    else:
+        print("Authentication successful! Welcome back,", username)    
     
     while True:
         print('Main Menu')
@@ -421,26 +405,29 @@ def main():
         menu_option = int(input("Please, select option between 1 and 7: "))
         
         if menu_option == 1:
-            add_task()
+            add_task(username, user_data)
         elif menu_option == 2:
-            view_all_tasks()
+            view_all_tasks(user_data)
         elif menu_option == 3:
             category = input("Enter category (P for Personal, B for Business): ").upper()
             if category in ['P', 'B']:
-                list_tasks(category)
+                list_tasks(user_data[username]['tasks'][category])
             else:
                 print("Invalid category. Please enter P or B.")
         elif menu_option == 4:
-            update_status_task()
+            update_status_task(user_data[username]['tasks'])
         elif menu_option == 5:
-            remove_task()
+            remove_task(user_data[username]['tasks'])
         elif menu_option == 6:
             pass  # Implemente a função clear_screen() se desejar
         elif menu_option == 7:
+            save_user_data(user_data, 'users_data.json')  # Salva os dados do usuário antes de sair
             print("Exiting the application.")
             break
         else:
             print("Invalid option, please choose option between 1 and 7")
 
 
+print("Welcome to your TaskManager Data Automation")   
 
+main()
