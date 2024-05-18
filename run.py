@@ -19,6 +19,8 @@ def add_task(username, user_data):
         if priority is None:
             break
         
+    
+
         category = validate_category()
         if category is None:
             break
@@ -140,14 +142,6 @@ def validate_status():
 
 
 
-
-
-
-
-
-         
-
-
         
 
 
@@ -254,69 +248,59 @@ def sort_by_status(user_task):
 
 
 
-def update_status_task(user_task):
-    tasks = user_task['tasks']
+def update_status_task(user_tasks):
     while True:
         category = input("Enter the category (P for Personal, B for Business): ").upper()
-        list_tasks(user_task, category)
-
-        id = int(input("Enter the ID of the task to update the status: "))
-        
-        found_task = False
-        for p, v in enumerate(tasks[category]):
-            if id == p:
-                v['status'] = input('Enter the new task status ("complete", "in progress", "pending"): ').lower()
-                print("Task successfully updated")
-                found_task = True
-                break
-
-        if not found_task:
-            print('Invalid ID option. Please enter a valid ID.')
-            continue  # Volta para o início do loop externo para solicitar um novo ID
-
-        while True:
-            update_another = input("Would you like to update another task? (Y/N): ").upper()
-            if update_another in ('Y', 'N'):
-                break
-            else:
-                print('Invalid input. Please enter Y or N.')
-        
-        if update_another == 'N':
-            break  # Sai do loop externo se o usuário não quiser atualizar mais tarefas
-
-def remove_task(user_task):
-    tasks = user_task['tasks']
-    while True:
-        category = input("Enter the category (P for Personal, B for Business): ").upper()
-        list_tasks(user_task, category)
-        found_task = False
-        id = int(input("Enter the ID of the task to delete: "))
-        
-        # Verifica se a categoria é válida
-        if category not in tasks:
-            print("Invalid category.")
+        if category not in ['P', 'B']:
+            print("Invalid category. Please enter P or B.")
             continue
         
-        # Verifica se o ID da tarefa está dentro do intervalo de índices da lista de tarefas
-        if id < 0 or id >= len(tasks[category]):
-            print('Invalid ID option. Please enter a valid ID.')
+        tasks = user_tasks[category.lower()]
+        list_tasks(user_tasks, category.lower())
+
+        try:
+            id = int(input("Enter the ID of the task to update the status: ")) - 1
+            if id < 0 or id >= len(tasks):
+                raise ValueError("Invalid ID. Please enter a valid ID.")
+        except ValueError as e:
+            print(f"Error: {e}")
             continue
 
-        # Remove a tarefa da lista de tarefas da categoria especificada
-        del tasks[category][id]
-        print('Task successfully removed')
-        found_task = True
-
-        while True:
-            update_another = input("Would you like to delete another task? (Y/N): ").upper()
-            if update_another in ('Y', 'N'):
-                break
-            else:
-                print('Invalid input. Please enter Y or N.')
+        status = validate_status()
+        if status is None:
+            continue
         
+        tasks[id]['status'] = status
+        print("Task successfully updated")
+
+        update_another = input("Would you like to update another task? (Y/N): ").upper()
         if update_another == 'N':
             break
 
+def remove_task(user_tasks):
+    while True:
+        category = input("Enter the category (P for Personal, B for Business): ").upper()
+        if category not in ['P', 'B']:
+            print("Invalid category. Please enter P or B.")
+            continue
+        
+        tasks = user_tasks[category.lower()]
+        list_tasks(user_tasks, category.lower())
+
+        try:
+            id = int(input("Enter the ID of the task to delete: ")) - 1
+            if id < 0 or id >= len(tasks):
+                raise ValueError("Invalid ID. Please enter a valid ID.")
+        except ValueError as e:
+            print(f"Error: {e}")
+            continue
+
+        del tasks[id]
+        print('Task successfully removed')
+
+        delete_another = input("Would you like to delete another task? (Y/N): ").upper()
+        if delete_another == 'N':
+            break
     
 # Login, verify user
 def load_user_data(file_path):
@@ -404,8 +388,12 @@ def main():
         print("6. Clear screen")
         print("7. Exit application")
         
-        menu_option = int(input("Please, select option between 1 and 7: "))
-        
+        try:
+            menu_option = int(input("Please, select option between 1 and 7: "))
+            raise ValueError('Please the number must be  between 1 and 7')
+        except ValueError as e:
+            print('Error: {e}. Invalid input')
+    
         if menu_option == 1:
             add_task(username, user_data)
         elif menu_option == 2:
@@ -413,7 +401,7 @@ def main():
         elif menu_option == 3:
             category = input("Enter category (P - for Personal, B - for Business): ").upper()
             if category in ['P', 'B']:
-                list_tasks(user_data[username]['tasks'][category])
+                list_tasks(user_data[username]['tasks'],category.lower())
             else:
                 print("Invalid category. Please enter P or B.")
         elif menu_option == 4:
