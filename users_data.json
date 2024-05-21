@@ -1,0 +1,35 @@
+{
+    "miriammcay": {
+        "password": "123456",
+        "tasks": {
+            "personal": [
+                {
+                    "name": "pay may-trip",
+                    "due_date": "27-05-2027",
+                    "priority": "medium",
+                    "category": "P",
+                    "description": "have to pay Christmas montly payment",
+                    "status": "Pending"
+                }
+            ],
+            "business": [
+                {
+                    "name": "miriam project3",
+                    "due_date": "24-05-2024",
+                    "priority": "high",
+                    "category": "B",
+                    "description": "have to submit bu due date",
+                    "status": "In Progress"
+                },
+                {
+                    "name": "ptyhon event",
+                    "due_date": "21-05-2024",
+                    "priority": "medium",
+                    "category": "B",
+                    "description": "attend a pyladies event",
+                    "status": "Pending"
+                }
+            ]
+        }
+    }
+}
