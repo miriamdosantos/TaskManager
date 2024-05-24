@@ -14,5 +14,12 @@
             ],
             "business": []
         }
+    },
+    "paulo": {
+        "password": "123456789",
+        "tasks": {
+            "personal": [],
+            "business": []
+        }
     }
 }
