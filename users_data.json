@@ -46,5 +46,12 @@
             "personal": [],
             "business": []
         }
+    },
+    "mirim": {
+        "password": "88888",
+        "tasks": {
+            "personal": [],
+            "business": []
+        }
     }
 }
