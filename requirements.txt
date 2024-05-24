@@ -1,5 +1,5 @@
 # Your requirements go here
 #pip freeze > requirements.txt
 colorama==0.4.4
-memcache
+python3-memcached==1.51
 art==5.2
