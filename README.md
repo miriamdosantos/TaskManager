@@ -196,7 +196,7 @@ All features were manually tested to ensure they work as expected. Below are the
 - One popular tool for creating flowcharts is Lucidchart. It's a web-based diagramming software that allows you to create flowcharts, diagrams, and other visual representations easily.
 
 Ilustration  the workflow of the Task Manager application, depicting the various stages such as user registration, login, task management (add, remove, edit, view, sort), and logout. Include decision points for error handling and user choices, and illustrate how the application interacts with the user and data storage
-
+![Flow](assest/documentation/flow.jpg)
 ## Deployment
 * Steps for deployment:
     - Fork or clone the repository
