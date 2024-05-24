@@ -15,6 +15,9 @@ if memcached_username and memcached_password:
 else:
     memcached_servers_with_auth = memcached_servers
 
+# Print the connection string for debugging
+print("Memcached connection string:", memcached_servers_with_auth)
+
 # Connect to Memcached
 mc = memcache.Client([memcached_servers_with_auth], debug=0)
 
