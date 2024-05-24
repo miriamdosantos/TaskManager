@@ -1,12 +1,28 @@
-import json
-from datetime import datetime
-# from validotor import * / criar um outro file
+
+
 import os
+import json
+import memcache
+from datetime import datetime
+
+# Configure Memcached
+memcached_servers = os.getenv('MEMCACHIER_SERVERS', 'localhost:11211')
+memcached_username = os.getenv('MEMCACHIER_USERNAME', '')
+memcached_password = os.getenv('MEMCACHIER_PASSWORD', '')
+
+# Build the connection string with authentication
+if memcached_username and memcached_password:
+    memcached_servers_with_auth = f'{memcached_username}:{memcached_password}@{memcached_servers}'
+else:
+    memcached_servers_with_auth = memcached_servers
+
+# Connect to Memcached
+mc = memcache.Client([memcached_servers_with_auth], debug=0)
 
 CATEGORY_MAPPING = {'P': 'personal', 'B': 'business'}
 STATUS_MAPPING = {'C': 'Complete', 'P': 'Pending', 'IP': 'In Progress'}
 
-def add_task(username, user_data):
+def add_task(username, users):
     while True:
         name = validate_name()
         if name is None:
@@ -43,17 +59,19 @@ def add_task(username, user_data):
         }
 
         if category == 'P':
-            user_data[username]['tasks']['personal'].append(task)
+            user_tasks = users[username]['tasks']
+            user_tasks['personal'].append(task)
             print('Task successfully inserted into Personal category')
         elif category == 'B':
-            user_data[username]['tasks']['business'].append(task)
+            user_tasks = users[username]['tasks']
+            user_tasks['business'].append(task)
             print('Task successfully inserted into Business category')    
         else:
             print('Invalid category')
             continue
         
-        with open('users_data.json', 'w') as file:
-            json.dump(user_data, file, indent=4)
+        # Salvar os dados após adicionar a nova tarefa
+        save_data(username, users)
         
         while True:
             try:
@@ -66,6 +84,7 @@ def add_task(username, user_data):
                     return
             except ValueError as e:
                 print(f'Error: {e}')
+
 
 def validate_name():
     while True:
@@ -142,110 +161,95 @@ def validate_status():
         except ValueError as e:
             print(f'Error: {e}')
 
-def list_tasks(user_tasks, category_input):
-    category = CATEGORY_MAPPING.get(category_input)
-    mapped_category = category if category else 'Unknown'
+def get_user_tasks(username):
+    user_tasks = mc.get(username)
+    if not user_tasks:
+        return {'personal': [], 'business': []}
+    return json.loads(user_tasks)
 
-    high_priority = []
-    medium_priority = []
-    low_priority = []
+def set_user_tasks(username, tasks):
+    mc.set(username, json.dumps(tasks))
 
-    if mapped_category not in user_tasks or not user_tasks[mapped_category]:
-        print(f"{mapped_category.capitalize()} Tasks: None")
+def list_tasks(user_tasks):
+    all_tasks = [task for category_tasks in user_tasks.values() for task in category_tasks]
+
+    if not all_tasks:
+        print("No tasks found for this user.")
         return
 
-    for i, task in enumerate(user_tasks[mapped_category]):
-        if task['priority'] == 'high':
-            high_priority.append((i + 1, task))
-        elif task['priority'] == 'medium':
-            medium_priority.append((i + 1, task))
-        elif task['priority'] == 'low':
-            low_priority.append((i + 1, task))
+    personal_tasks = [task for task in all_tasks if task['category'] == 'P']
+    business_tasks = [task for task in all_tasks if task['category'] == 'B']
 
-    print(f"{mapped_category.capitalize()} Tasks:")
-
-    if not high_priority:
-        print("High Priority Tasks are empty at the moment")
+    if personal_tasks:
+        print("Personal Tasks:")
+        for i, task in enumerate(personal_tasks, start=1):
+            print_task_details(task, f"P{i}")
     else:
-        print("High Priority:")
-        for task_id, task in high_priority:
-            print_task_details(task, task_id)
+        print("No Personal Tasks")
 
-    if not medium_priority:
-        print("Medium Priority Tasks are empty at the moment")
+    if business_tasks:
+        print("Business Tasks:")
+        for i, task in enumerate(business_tasks, start=1):
+            print_task_details(task, f"B{i}")
     else:
-        print("Medium Priority:")
-        for task_id, task in medium_priority:
-            print_task_details(task, task_id)
+        print("No Business Tasks")
 
-    if not low_priority:
-        print("Low Priority Tasks are empty at the moment")
-    else:
-        print("Low Priority:")
-        for task_id, task in low_priority:
-            print_task_details(task, task_id)
+def print_task_details(task, task_id):
+    print(f"Task ID: {task_id}")
+    print(f"Name: {task['name']}")
+    print(f"Due Date : {task['due_date']}")
+    print(f"Priority: {task['priority']}")
+    print(f"Category: {task['category'].capitalize()}")
+    print(f"Description: {task['description']}")
+    print(f"Status: {task['status']}")
+    print("-----------")
+
+
+def sort_tasks_menu(user_tasks):
+    all_tasks = [task for category_tasks in user_tasks.values() for task in category_tasks]
+
+    if not all_tasks:
+        print("No tasks found for this user.")
+        return
+
+    list_tasks(user_tasks)
 
     while True:
-        print("Sort Options:")
-        print("1. By Due Date (closest first)")
-        print("2. By Due Date (farthest first)")
-        print("3. By Status")
-        print("4. Back to Main Menu")
-
-        try:
-            sort_option = int(input("Enter your choice: "))
-            if sort_option not in [1, 2, 3, 4]:
-                raise ValueError("Invalid choice. Please enter a number between 1 and 4.")
-        except ValueError:
-            print("Invalid input. Please enter a valid number.")
+        sort_criteria = input("Enter the sorting criteria (name, due_date, priority, status) or type 'quit' to exit: ").strip().lower()
+        if sort_criteria == 'quit':
+            return
+        if sort_criteria not in ['name', 'due_date', 'priority', 'status']:
+            print('Invalid sorting criteria. Please enter one of the following: name, due_date, priority, status.')
             continue
 
-        if sort_option == 1:
-            sorted_tasks = sort_by_due_date(user_tasks[mapped_category], reverse=False)
-            print("Tasks closest first:")
-            for i, task in enumerate(sorted_tasks):
-                print_task_details(task, i + 1)
-        elif sort_option == 2:
-            sorted_tasks = sort_by_due_date(user_tasks[mapped_category], reverse=True)
-            print("Tasks farthest first:")
-            for i, task in enumerate(sorted_tasks):
-                print_task_details(task, i + 1)
-        elif sort_option == 3:
-            sorted_tasks = sort_by_status(user_tasks[mapped_category])
-            print('Tasks by Status order: "Pending"; "In Progress"; "Complete"')
-            for i, task in enumerate(sorted_tasks):
-                print_task_details(task, i + 1)
-        elif sort_option == 4:
-            print("Returning to the Main Menu.")
-            break
+        sorted_tasks = sorted(all_tasks, key=lambda x: x.get(sort_criteria, ''))
+        print_sorted_tasks(sorted_tasks)
+        break
+
+def print_sorted_tasks(sorted_tasks):
+    if sorted_tasks:
+        print("Sorted Tasks:")
+        for i, task in enumerate(sorted_tasks, start=1):
+            task_id = f"{task['category']}{i}"
+            print_task_details(task, task_id)
+    else:
+        print("No tasks to display.")
 
 def sort_by_due_date(tasks, reverse=False):
     return sorted(tasks, key=lambda x: datetime.strptime(x['due_date'], "%d-%m-%Y"), reverse=reverse)
-
 
 def sort_by_status(tasks):
     status_order = {"Pending": 1, "In Progress": 2, "Complete": 3}
     return sorted(tasks, key=lambda x: status_order.get(x['status'], float('inf')))
 
-def print_task_details(task, task_id):
-    category_full_name = CATEGORY_MAPPING.get(task['category'], 'Unknown')
-    print(f"Task ID: {task_id}")
-    print(f"Name: {task['name']}")
-    print(f"Due Date: {task['due_date']}")
-    print(f"Priority: {task['priority']}")
-    print(f"Category: {category_full_name}")
-    print(f"Description: {task['description']}")
-    print(f"Status: {task['status']}")
-    print("-----------")
-
-def remove_task(user_data, username):
-    user_tasks = user_data.get(username, {}).get('tasks', {})
+def remove_task(username, user_data):  # Adicionando 'username' como parâmetro
+    user_tasks = user_data.get('tasks', {})
     if not user_tasks:
         print('No tasks found for this user.')
         return
 
-    view_all_tasks(user_tasks)
-    
+    list_tasks(user_tasks)
+
     while True:
         task_id = input('Enter the Task ID to remove (e.g., P1, B2) or type "quit" to exit: ').strip()
         if task_id.lower() in ['quit', 'exit']:
@@ -253,163 +257,151 @@ def remove_task(user_data, username):
         if not task_id or len(task_id) < 2:
             print('Please enter a valid Task ID.')
             continue
-        
+
         category_code = task_id[0].upper()
         if category_code not in CATEGORY_MAPPING:
             print('Invalid Task ID format. It should start with "P" or "B" followed by a number.')
             continue
-        
+
         category = CATEGORY_MAPPING[category_code]
         try:
             task_index = int(task_id[1:]) - 1
-            if task_index < 0 or task_index >= len(user_tasks[category]):
+            if task_index < 0 or task_index >= len(user_tasks.get(category, [])):
                 raise ValueError('Task ID out of range. Please enter a valid Task ID.')
         except ValueError as e:
             print(f'Error: {e}')
             continue
-        
+
         user_tasks[category].pop(task_index)
-        
-        with open('users_data.json', 'w') as file:
-            json.dump(user_data, file, indent=4)
-        
+
+        # Atualizar o cache com os dados do usuário
+        set_user_tasks(username, user_tasks)
+
         print('Task removed successfully.')
         break
 
 
-def update_task(username, user_data):
-    user_tasks = user_data.get(username, {}).get('tasks', {})
+def update_task(username, users):  # Adicionar o argumento 'username'
+    user_data = users.get(username, {})  # Obter os dados do usuário com base no nome de usuário
+    user_tasks = user_data.get('tasks', {})  # Obter as tarefas do usuário dos dados do usuário
     if not user_tasks:
         print('No tasks found for this user.')
         return
 
-    view_all_tasks(user_tasks)
-
     while True:
+        category_code = input("Enter the category to update (P for Personal, B for Business), or type 'quit' to exit: ").strip().upper()
+        if category_code == 'QUIT':
+            return
+        if category_code not in CATEGORY_MAPPING:
+            print("Error: Invalid category. Please enter 'P' for Personal or 'B' for Business.")
+            continue
+
+        category = CATEGORY_MAPPING[category_code]
+        tasks_in_category = user_tasks.get(category, [])
+
+        if not tasks_in_category:
+            print(f"{category} Tasks are empty.")
+            continue
+
+        list_tasks({category: tasks_in_category})
+
+        task_id = input(f"Enter the Task ID to update in category {category_code} (e.g., {category_code}1), or type 'quit' to exit: ").strip().upper()
+        if task_id == 'QUIT':
+            return
+        if not task_id.startswith(category_code) or len(task_id) < 2:
+            print('Invalid Task ID format. Please ensure it matches the format (e.g., P1, B2).')
+            continue
+
         try:
-            task_id = input('Enter the Task ID to update (or type "quit" to exit): ')
-            if task_id.lower() in ['quit', 'exit']:
-                return
-            if not task_id.strip():
-                raise ValueError('Please, enter the Task ID, (or type "quit" to exit) field can\'t be empty')
-            task_id = int(task_id)
+            task_index = int(task_id[1:]) - 1
+            if task_index < 0 or task_index >= len(tasks_in_category):
+                print('Task ID out of range. Please enter a valid Task ID.')
+                continue
+        except ValueError:
+            print('Invalid Task ID format. Please ensure it ends with a number (e.g., P1, B2).')
+            continue
 
-            while True:
-                try:
-                    category = input('Enter the category of the task to update (P - Personal, B - Business) (or type "quit" to exit): ').upper()
-                    if category.lower() in ['quit', 'exit']:
-                        return
-                    if not category.strip():
-                        raise ValueError('Please, enter the correct category: (P - Personal, B - Business), (or type "quit" to exit) field can\'t be empty')
-                    mapped_category = CATEGORY_MAPPING.get(category)
+        task = tasks_in_category[task_index]
+        print("Current task details:")
+        print_task_details(task, task_id)
 
-                    if mapped_category not in user_tasks:
-                        raise ValueError('Invalid category')
+        task['name'] = input('Enter new task name (leave blank to keep current): ')
+        task['due_date'] = input('Enter new due date (leave blank to keep current): ')
+        task['priority'] = input('Enter new priority (low, medium, high; leave blank to keep current): ').lower()
+        task['description'] = input('Enter new description (leave blank to keep current): ')
+        task['status'] = input('Enter new status (Not Started, In Progress, Complete; leave blank to keep current): ').upper()
 
-                    tasks = user_tasks[mapped_category]
-                    if task_id < 1 or task_id > len(tasks):
-                        raise ValueError('Invalid Task ID in this Category')
+        # Atualizar o arquivo JSON com os dados do usuário
+        with open('users_data.json', 'w') as file:
+            json.dump(users, file, indent=4)
 
-                    task_index = task_id - 1
-                    task = tasks[task_index]
-                    break  # Break do loop de categoria se tudo estiver certo
-                except ValueError as e:
-                    print(f'Error: {e}')
+        print('Task updated successfully.')
+        break
 
-            while True:
-                print_task_details(task, task_id)
-                print('Select the field to update:')
-                print('1. Name')
-                print('2. Due Date')
-                print('3. Priority')
-                print('4. Category')
-                print('5. Description')
-                print('6. Status')
-                print('7. Back to Main Menu')
+def update_field_menu(task):
+    while True:
+        print("Select field to update:")
+        print("1. Name")
+        print("2. Due Date")
+        print("3. Priority")
+        print("4. Description")
+        print("5. Status")
+        print("6. Back to main menu")
 
-                try:
-                    field_choice = input('Enter your choice: ')
-                    if not field_choice.strip():
-                        print('Please enter a valid choice.')
-                        continue
-                    field_choice = int(field_choice)
-                    if field_choice not in range(1, 8):
-                        print('Invalid choice. Please enter a number between 1 and 7.')
-                        continue
-                except ValueError:
-                    print('Invalid input. Please enter a valid number.')
-                    continue  # Continuar perguntando no loop interno até obter uma entrada válida
+        field_choice = input("Enter your choice: ")
 
-                if field_choice == 1:
-                    new_name = validate_name()
-                    if new_name:
-                        task['name'] = new_name
-                        print('Task name updated successfully')
-                elif field_choice == 2:
-                    new_due_date = validate_date()
-                    if new_due_date:
-                        task['due_date'] = new_due_date
-                        print('Task Due Date updated successfully')
-                elif field_choice == 3:
-                    new_priority = validate_priority()
-                    if new_priority:
-                        task['priority'] = new_priority
-                        print('Task Priority updated successfully')
-                elif field_choice == 4:
-                    new_category = validate_category()
-                    if new_category:
-                        new_mapped_category = CATEGORY_MAPPING.get(new_category)
-                        if new_mapped_category and new_mapped_category != mapped_category:
-                            tasks.pop(task_index)
-                            user_tasks[new_mapped_category].append(task)
-                            # Atualize a referência da lista de tarefas
-                            user_tasks[mapped_category] = tasks
-                            mapped_category = new_mapped_category
-                            print('Task Category updated successfully')
-                            # Salvar as alterações no arquivo JSON após a atualização da categoria
-                            with open('users_data.json', 'w') as file:
-                                json.dump(user_data, file, indent=4)
-                            break  # Sair do loop para permitir a atualização do mapeamento da categoria
-                elif field_choice == 5:
-                    new_description = validate_description()
-                    if new_description:
-                        task['description'] = new_description
-                        print('Task Description updated successfully')
-                elif field_choice == 6:
-                    new_status = validate_status()
-                    if new_status:
-                        task['status'] = STATUS_MAPPING[new_status]
-                        print('Task Status updated successfully')
-                elif field_choice == 7:
-                    return
+        if field_choice == '1':
+            new_name = input("Enter the new name for the task: ")
+            task['name'] = new_name
+        elif field_choice == '2':
+            new_due_date = input("Enter the new due date for the task (YYYY-MM-DD): ")
+            task['due_date'] = new_due_date
+        elif field_choice == '3':
+            new_priority = input("Enter the new priority for the task (high/medium/low): ").lower()
+            if new_priority in ['high', 'medium', 'low']:
+                task['priority'] = new_priority
+            else:
+                print("Invalid priority. Please enter 'high', 'medium', or 'low'.")
+        elif field_choice == '4':
+            new_description = input("Enter the new description for the task: ")
+            task['description'] = new_description
+        elif field_choice == '5':
+            new_status = input("Enter the new status for the task (P for Pending, IP for In Progress, C for Complete): ").upper()
+            if new_status in ['P', 'IP', 'C']:
+                task['status'] = new_status
+            else:
+                print("Invalid status. Please enter 'P' for Pending, 'IP' for In Progress, or 'C' for Complete.")
+        elif field_choice == '6':
+            break  # Volta para o menu principal
+        else:
+            print("Invalid choice. Please enter a number between 1 and 6.")
 
-                # Salvar as alterações no arquivo JSON
-                with open('users_data.json', 'w') as file:
-                    json.dump(user_data, file, indent=4)
 
-                break  # Sair do loop interno após a atualização de um campo
+def save_data(username, users):
+    # Atualizar o cache com os dados do usuário
+    user_tasks = users.get(username, {}).get('tasks', {})
+    set_user_tasks(username, user_tasks)
 
-        except ValueError as e:
-            print(f'Error: {e}')
+    # Escrever os dados em um arquivo JSON
+    with open('users_data.json', 'w') as file:
+        json.dump(users, file, indent=4)
+    # Escrever os dados em um arquivo JSON
+    with open('users_data.json', 'w') as file:
+        json.dump(users, file, indent=4)
+
+def check_empty_list(tasks, message):
+    if not tasks:
+        print(message)
+        return True
+    return False
 
 def load_user_data():
-    if os.path.exists('users_data.json'):
+    try:
         with open('users_data.json', 'r') as file:
             return json.load(file)
-    return {}
-
-def register_user(users):
-    while True:
-        username = input("Enter username: ")
-        password = input("Enter password: ")
-
-        if username in users:
-            print("Username already exists. Please choose a different username.")
-        else:
-            users[username] = {'password': password, 'tasks': {'personal': [], 'business': []}}
-            print(f"User {username} registered successfully!")
-            return username, users
-
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+    
 def login_user(users):
     while True:
         username = input("Enter username: ")
@@ -421,87 +413,26 @@ def login_user(users):
         else:
             print("Invalid username or password. Please try again.")
 
-def check_empty_list(task_list, message):
-    if not task_list:
-        print(message)
-        return True
-    return False
-
-def view_all_tasks(user_tasks):
-    if not user_tasks.get('personal') and not user_tasks.get('business'):
-        print('No tasks found.')
-        return
-    
-    if user_tasks.get('personal'):
-        print('Personal Tasks:')
-        for idx, task in enumerate(user_tasks['personal']):
-            print(f'Task ID: P{idx + 1}')
-            print(f'Name: {task["name"]}')
-            print(f'Due Date: {task["due_date"]}')
-            print(f'Priority: {task["priority"]}')
-            print(f'Category: Personal')
-            print(f'Description: {task["description"]}')
-            print(f'Status: {task["status"]}')
-            print('-----------')
-    
-    if user_tasks.get('business'):
-        print('Business Tasks:')
-        for idx, task in enumerate(user_tasks['business']):
-            print(f'Task ID: B{idx + 1}')
-            print(f'Name: {task["name"]}')
-            print(f'Due Date: {task["due_date"]}')
-            print(f'Priority: {task["priority"]}')
-            print(f'Category: Business')
-            print(f'Description: {task["description"]}')
-            print(f'Status: {task["status"]}')
-            print('-----------')
-            
-def task_menu(username, users):
-    user_data = users[username]
-    user_tasks = user_data['tasks']
-    
+def register_user(users):
     while True:
-        print("1. Add task")
-        print("2. List tasks by Category : Personal/Business")
-        print("3. Update task status")
-        print("4. Remove task")
-        print("5. Edit task")
-        print("6. View all tasks")
-        print("7. Logout")
-        choice = input("Enter your choice: ")
+        try:
+            username = input("Enter username: ").strip()
+            if len(username) < 5:
+                raise ValueError("Username must be at least 5 characters long.")
+            
+            password = input("Enter password: ").strip()
+            if len(password) < 5:
+                raise ValueError("Password must be at least 5 characters long.")
+            
+            if username in users:
+                print("Username already exists. Please choose a different username.")
+            else:
+                users[username] = {'password': password, 'tasks': {'personal': [], 'business': []}}
+                print(f"User {username} registered successfully!")
+                return username, users
+        except ValueError as ve:
+            print(f"Error: {ve}")
 
-        if choice == '1':
-            add_task(username, users)
-        elif choice == '2':
-            while True:
-                try:
-                    category_input = input("Enter category (P for Personal, B for Business): ").upper()
-                    if category_input not in ['P', 'B']:
-                        raise ValueError("Invalid category. Please enter 'P' for Personal or 'B' for Business.")
-                    category = CATEGORY_MAPPING.get(category_input)
-                    if not user_tasks.get(category):
-                        print(f"{category.capitalize()} Tasks are empty.")
-                    else:
-                        list_tasks(user_tasks, category_input)
-                    break  # Exit the loop if no errors occur
-                except ValueError as ve:
-                    print(f"Error: {ve}")
-        elif choice == '3':
-            if not check_empty_list(user_tasks['personal'] + user_tasks['business'], 'No tasks available to update.'):
-                update_task(username, users)
-        elif choice == '4':
-            if not check_empty_list(user_tasks['personal'] + user_tasks['business'],'No tasks available to delete.'):
-                remove_task(users, username)
-        elif choice == '5':
-            if not check_empty_list(user_tasks['personal'] + user_tasks['business'],'No tasks available to edit.'):
-                update_task(username, users)
-        elif choice == '6':
-            if not check_empty_list(user_tasks['personal'] + user_tasks['business'], 'No tasks to view'):
-                view_all_tasks(user_tasks)
-        elif choice == '7':
-            break
-        else:
-            print("Invalid choice. Please enter a number between 1 and 7.")
 
 def main():
     users = load_user_data()
@@ -521,11 +452,56 @@ def main():
                 task_menu(username, users)
         elif choice == '3':
             print("Quitting the program.")
-            with open('users_data.json', 'w') as file:
-                json.dump(users, file, indent=4)
+            save_data(users)
             break
         else:
-            print("Invalid choice. Please enter 1, 2, or 3.") 
-            
-print('Welcome to your TaskManager')
-main()
+            print("Invalid choice. Please enter 1, 2, or 3.")
+
+def task_menu(username, users):
+    user_data = users.get(username, {})
+    if not user_data:
+        print('User not found.')
+        return
+
+    user_tasks = user_data.get('tasks', {})
+    if not user_tasks:
+        print('No tasks found for this user.')
+        return
+
+    while True:
+        print("Task Menu:")
+        print("1. Add Task")
+        print("2. Remove Task")
+        print("3. Edit Task")
+        print("4. View All Tasks")
+        print("5. Sort Tasks")
+        print("6. Logout")
+
+        choice = input("Enter your choice: ")
+
+        if choice == '1':
+            add_task(username, users)
+        elif choice == '2':
+            remove_task(username, user_data)  # Passando 'username' como primeiro argumento
+
+        elif choice == '3':
+            update_task(username, users)
+        elif choice == '4':
+            list_tasks(user_tasks)
+        elif choice == '5':
+            sort_tasks_menu(user_tasks)
+        elif choice == '6':
+            print("Logging out.")
+            break
+        else:
+            print("Invalid choice. Please enter a number between 1 and 6.")
+users = load_user_data()
+               
+try:
+    main()
+    save_data(users)
+except Exception as e:
+    pass
+finally:
+    # Aqui não precisamos chamar save_data(users) porque já foi chamado dentro do bloco try
+    pass
