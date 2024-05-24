@@ -8,7 +8,6 @@ from tasks import  list_tasks, remove_task, update_task, sort_tasks_menu
 from validators import validate_name, validate_date, validate_priority, validate_category, validate_description, validate_status
 import os
 from cache_utils import save_data
-import json
 import memcache
 from tasks import  remove_task, list_tasks, update_task, sort_tasks_menu
 from auth import load_user_data, save_user_data, login_user, register_user
@@ -17,6 +16,16 @@ CATEGORY_MAPPING = {'P': 'personal', 'B': 'business'}
 STATUS_MAPPING = {'C': 'Complete', 'P': 'Pending', 'IP': 'In Progress'}
 
 def add_task(username, users):
+    """
+    Add a new task for the specified user.
+
+    Args:
+        username (str): The username of the user.
+        users (dict): The dictionary containing user data.
+
+    Returns:
+        None
+    """
     while True:
         name = validate_name()
         if name is None:
@@ -64,7 +73,7 @@ def add_task(username, users):
             print('Invalid category')
             continue
         
-        # Salvar os dados após adicionar a nova tarefa
+        # Save data after adding the new task
         save_data(username, users)
         
         while True:
@@ -82,8 +91,14 @@ def add_task(username, users):
 
 
 
-
+# Main function for running the Task Manager
 def main():
+    """
+    Main function for running the Task Manager application.
+
+    Returns:
+        None
+    """
     users = load_user_data()
     
     while True:
@@ -107,6 +122,16 @@ def main():
             print("Invalid choice. Please enter 1, 2, or 3.")
 
 def task_menu(username, users):
+    """
+    Display the task menu for the logged-in user.
+
+    Args:
+        username (str): The username of the logged-in user.
+        users (dict): The dictionary containing user data.
+
+    Returns:
+        None
+    """
     user_data = users.get(username, {})
     if not user_data:
         print('User not found.')
@@ -152,5 +177,5 @@ try:
 except Exception as e:
     pass
 finally:
-    # Aqui não precisamos chamar save_data(users) porque já foi chamado dentro do bloco try
+    # Save data if an exception occurs
     pass

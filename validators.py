@@ -6,6 +6,12 @@ CATEGORY_MAPPING = {'P': 'personal', 'B': 'business'}
 STATUS_MAPPING = {'P': 'Pending', 'IP': 'In Progress', 'C': 'Complete'}
 
 def validate_name():
+    """
+    Validate task name input.
+
+    Returns:
+        str: Valid task name.
+    """
     while True:
         try:
             name = input('Enter the task name (or type "quit" to exit): ')
@@ -20,6 +26,12 @@ def validate_name():
             print(f'Error: {e}')
 
 def validate_date():
+    """
+    Validate task due date input.
+
+    Returns:
+        str: Valid due date in the format DD-MM-YYYY or None if the user exits.
+    """
     while True:
         try:
             due_date_str = input("Enter the due date (DD-MM-YYYY) (or type 'quit' to exit): ")
@@ -31,6 +43,12 @@ def validate_date():
             print(f'Error: {e}. Please enter the date in the format DD-MM-YYYY.')
 
 def validate_priority():
+    """
+    Validate task priority input.
+
+    Returns:
+        str: Valid priority (low, medium, high) or None if the user exits.
+    """
     while True:
         try:
             priority = input('Enter the priority (low, medium, high) (or type "quit" to exit): ').lower()
@@ -43,6 +61,12 @@ def validate_priority():
             print(f'Error: {e}')
 
 def validate_category():
+    """
+    Validate task category input.
+
+    Returns:
+        str: Valid category (P for Personal, B for Business) or None if the user exits.
+    """
     while True:
         try:
             category = input('Enter the category: P - (Personal), B - (Business) (or type "quit" to exit): ').upper()
@@ -55,6 +79,12 @@ def validate_category():
             print(f'Error: {e}')
 
 def validate_description():
+    """
+    Validate task description input.
+
+    Returns:
+        str: Valid description (maximum 50 characters) or None if the user exits.
+    """
     while True:
         try:
             description = input('Enter the description: (maximum 50 characters, press Enter to skip) (or type "quit" to exit): ')
@@ -69,6 +99,12 @@ def validate_description():
             print(f'Error: {e}')
 
 def validate_status():
+    """
+    Validate task status input.
+
+    Returns:
+        str: Valid status (C for Complete, P for Pending, IP for In Progress) or None if the user exits.
+    """
     while True:
         try:
             status = input('Enter the task status : C - (Complete); P - (Pending);  IP - (In Progress) (or type "quit" to exit): ').upper()

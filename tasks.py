@@ -14,6 +14,15 @@ STATUS_MAPPING = {'P': 'Pending', 'IP': 'In Progress', 'C': 'Complete'}
 
 
 def list_tasks(user_tasks):
+    """
+    List all tasks for the user.
+
+    Parameters:
+        user_tasks (dict): A dictionary containing user tasks.
+
+    Returns:
+        None
+    """
     all_tasks = [task for category_tasks in user_tasks.values() for task in category_tasks]
 
     if not all_tasks:
@@ -38,6 +47,16 @@ def list_tasks(user_tasks):
         print("No Business Tasks")
 
 def print_task_details(task, task_id):
+    """
+    Print details of a task.
+
+    Parameters:
+        task (dict): A dictionary representing a task.
+        task_id (str): ID of the task.
+
+    Returns:
+        None
+    """
     print(f"Task ID: {task_id}")
     print(f"Name: {task['name']}")
     print(f"Due Date : {task['due_date']}")
@@ -49,6 +68,15 @@ def print_task_details(task, task_id):
 
 
 def sort_tasks_menu(user_tasks):
+    """
+    Menu to sort tasks based on different criteria.
+
+    Parameters:
+        user_tasks (dict): A dictionary containing user tasks.
+
+    Returns:
+        None
+    """
     all_tasks = [task for category_tasks in user_tasks.values() for task in category_tasks]
 
     if not all_tasks:
@@ -70,6 +98,15 @@ def sort_tasks_menu(user_tasks):
         break
 
 def print_sorted_tasks(sorted_tasks):
+    """
+    Print sorted tasks.
+
+    Parameters:
+        sorted_tasks (list): A list of tasks sorted based on a criteria.
+
+    Returns:
+        None
+    """
     if sorted_tasks:
         print("Sorted Tasks:")
         for i, task in enumerate(sorted_tasks, start=1):
@@ -79,13 +116,41 @@ def print_sorted_tasks(sorted_tasks):
         print("No tasks to display.")
 
 def sort_by_due_date(tasks, reverse=False):
+    """
+    Sort tasks by their status.
+
+    Parameters:
+        tasks (list): A list of tasks.
+
+    Returns:
+        list: Sorted list of tasks by status.
+    """
     return sorted(tasks, key=lambda x: datetime.strptime(x['due_date'], "%d-%m-%Y"), reverse=reverse)
 
 def sort_by_status(tasks):
+    """
+    Sort tasks by their status.
+
+    Parameters:
+        tasks (list): A list of tasks.
+
+    Returns:
+        list: Sorted list of tasks by status.
+    """
     status_order = {"Pending": 1, "In Progress": 2, "Complete": 3}
     return sorted(tasks, key=lambda x: status_order.get(x['status'], float('inf')))
 
-def remove_task(username, user_data):  # Adicionando 'username' como parâmetro
+def remove_task(username, user_data): 
+    """
+    Remove a task for the user.
+
+    Parameters:
+        username (str): Username of the user.
+        user_data (dict): A dictionary containing user data.
+
+    Returns:
+        None
+    """
     user_tasks = user_data.get('tasks', {})
     if not user_tasks:
         print('No tasks found for this user.')
@@ -124,9 +189,19 @@ def remove_task(username, user_data):  # Adicionando 'username' como parâmetro
         break
 
 
-def update_task(username, users):  # Adicionar o argumento 'username'
-    user_data = users.get(username, {})  # Obter os dados do usuário com base no nome de usuário
-    user_tasks = user_data.get('tasks', {})  # Obter as tarefas do usuário dos dados do usuário
+def update_task(username, users): 
+    """
+    Update an existing task for the user.
+
+    Parameters:
+        username (str): Username of the user.
+        users (dict): A dictionary containing user data.
+
+    Returns:
+        None
+    """ 
+    user_data = users.get(username, {}) 
+    user_tasks = user_data.get('tasks', {})  
     if not user_tasks:
         print('No tasks found for this user.')
         return
@@ -182,6 +257,15 @@ def update_task(username, users):  # Adicionar o argumento 'username'
         break
 
 def update_field_menu(task):
+    """
+    Update fields of a task.
+
+    Parameters:
+        task (dict): A dictionary representing a task.
+
+    Returns:
+        None
+    """
     while True:
         print("Select field to update:")
         print("1. Name")
@@ -222,6 +306,16 @@ def update_field_menu(task):
 
 
 def check_empty_list(tasks, message):
+    '''
+    Checks if the tasks it really exist
+    and in case not, can't have a speficic message; related to that task
+    Parameters:
+    tasks(list with the dict within the dict represent the task)
+    message: Personalized message in case not find the tasks
+
+    Return:
+    True or False
+    '''
     if not tasks:
         print(message)
         return True
