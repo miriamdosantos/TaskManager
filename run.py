@@ -11,6 +11,10 @@ from cache_utils import save_data
 import memcache
 from tasks import  remove_task, list_tasks, update_task, sort_tasks_menu
 from auth import load_user_data, save_user_data, login_user, register_user
+from colorama import Fore, Style, init
+from art import text2art
+
+init(autoreset=True)
 
 CATEGORY_MAPPING = {'P': 'personal', 'B': 'business'}
 STATUS_MAPPING = {'C': 'Complete', 'P': 'Pending', 'IP': 'In Progress'}
@@ -61,16 +65,15 @@ def add_task(username, users):
             'status': status,
         }
 
+        user_tasks = users[username]['tasks']
         if category == 'P':
-            user_tasks = users[username]['tasks']
             user_tasks['personal'].append(task)
-            print('Task successfully inserted into Personal category')
+            print(Fore.GREEN + 'Task successfully inserted into Personal category')
         elif category == 'B':
-            user_tasks = users[username]['tasks']
             user_tasks['business'].append(task)
-            print('Task successfully inserted into Business category')    
+            print(Fore.GREEN + 'Task successfully inserted into Business category')
         else:
-            print('Invalid category')
+            print(Fore.RED + 'Invalid category')
             continue
         
         # Save data after adding the new task
@@ -78,7 +81,7 @@ def add_task(username, users):
         
         while True:
             try:
-                option = input('Would you like to add more tasks? (Y/N)').upper()
+                option = input('Would you like to add more tasks? (Y/N) ').upper()
                 if option not in ['Y', 'N']:
                     raise ValueError('Invalid input. Please answer: Y or N')
                 elif option == 'Y':
@@ -86,12 +89,8 @@ def add_task(username, users):
                 elif option == 'N':
                     return
             except ValueError as e:
-                print(f'Error: {e}')
+                print(Fore.RED + f'Error: {e}')
 
-
-
-
-# Main function for running the Task Manager
 def main():
     """
     Main function for running the Task Manager application.
@@ -102,10 +101,11 @@ def main():
     users = load_user_data()
     
     while True:
-        print("1. Register - You can easily sign up now to start organizing your tasks")
-        print("2. Login - If you already have an account with us")
-        print("3. Quit")
-        choice = input("Enter your choice: ")
+        print(Fore.CYAN + text2art("Task Manager"))
+        print(Fore.YELLOW + "1. Register - You can easily sign up now to start organizing your tasks")
+        print(Fore.YELLOW + "2. Login - If you already have an account with us")
+        print(Fore.YELLOW + "3. Quit")
+        choice = input(Fore.CYAN + "Enter your choice: ")
 
         if choice == '1':
             username, users = register_user(users)
@@ -115,11 +115,11 @@ def main():
             if username:
                 task_menu(username, users)
         elif choice == '3':
-            print("Quitting the program.")
+            print(Fore.GREEN + "Quitting the program.")
             save_data(users)
             break
         else:
-            print("Invalid choice. Please enter 1, 2, or 3.")
+            print(Fore.RED + "Invalid choice. Please enter 1, 2, or 3.")
 
 def task_menu(username, users):
     """
@@ -134,30 +134,29 @@ def task_menu(username, users):
     """
     user_data = users.get(username, {})
     if not user_data:
-        print('User not found.')
+        print(Fore.RED + 'User not found.')
         return
 
     user_tasks = user_data.get('tasks', {})
     if not user_tasks:
-        print('No tasks found for this user.')
+        print(Fore.RED + 'No tasks found for this user.')
         return
 
     while True:
-        print("Task Menu:")
-        print("1. Add Task")
-        print("2. Remove Task")
-        print("3. Edit Task")
-        print("4. View All Tasks")
-        print("5. Sort Tasks")
-        print("6. Logout")
+        print(Fore.CYAN + text2art("Task Menu"))
+        print(Fore.YELLOW + "1. Add Task")
+        print(Fore.YELLOW + "2. Remove Task")
+        print(Fore.YELLOW + "3. Edit Task")
+        print(Fore.YELLOW + "4. View All Tasks")
+        print(Fore.YELLOW + "5. Sort Tasks")
+        print(Fore.YELLOW + "6. Logout")
 
-        choice = input("Enter your choice: ")
+        choice = input(Fore.CYAN + "Enter your choice: ")
 
         if choice == '1':
             add_task(username, users)
         elif choice == '2':
-            remove_task(username, user_data)  # Passando 'username' como primeiro argumento
-
+            remove_task(username, user_data)
         elif choice == '3':
             update_task(username, users)
         elif choice == '4':
@@ -165,17 +164,18 @@ def task_menu(username, users):
         elif choice == '5':
             sort_tasks_menu(user_tasks)
         elif choice == '6':
-            print("Logging out.")
+            print(Fore.GREEN + "Logging out.")
             break
         else:
-            print("Invalid choice. Please enter a number between 1 and 6.")
-users = load_user_data()
-               
-try:
-    main()
-    save_data(users)
-except Exception as e:
-    pass
-finally:
-    # Save data if an exception occurs
-    pass
+            print(Fore.RED + "Invalid choice. Please enter a number between 1 and 6.")
+
+if __name__ == "__main__":
+    users = load_user_data()
+    try:
+        main()
+        save_data(users)
+    except Exception as e:
+        pass
+    finally:
+        # Save data if an exception occurs
+        pass

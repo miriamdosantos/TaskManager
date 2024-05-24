@@ -1,9 +1,11 @@
 # validators.py
-
+from colorama import Fore
 from datetime import datetime
 
 CATEGORY_MAPPING = {'P': 'personal', 'B': 'business'}
 STATUS_MAPPING = {'P': 'Pending', 'IP': 'In Progress', 'C': 'Complete'}
+
+
 
 def validate_name():
     """
@@ -14,7 +16,7 @@ def validate_name():
     """
     while True:
         try:
-            name = input('Enter the task name (or type "quit" to exit): ')
+            name = input(Fore.CYAN + 'Enter the task name (or type "quit" to exit): ')
             if name.lower() in ['quit', 'exit']:
                 return None
             if not name.strip():
@@ -23,71 +25,71 @@ def validate_name():
                 raise ValueError('Task name has to have at least 5 characters.')
             return name
         except ValueError as e:
-            print(f'Error: {e}')
+            print(Fore.RED + f'Error: {e}')
 
 def validate_date():
     """
     Validate task due date input.
 
     Returns:
-        str: Valid due date in the format DD-MM-YYYY or None if the user exits.
+        str: Valid due date in DD-MM-YYYY format.
     """
     while True:
         try:
-            due_date_str = input("Enter the due date (DD-MM-YYYY) (or type 'quit' to exit): ")
+            due_date_str = input(Fore.CYAN + "Enter the due date (DD-MM-YYYY) (or type 'quit' to exit): ")
             if due_date_str.lower() in ['quit', 'exit']:
                 return None
             due_date = datetime.strptime(due_date_str, "%d-%m-%Y")
             return due_date.strftime("%d-%m-%Y")
         except ValueError as e:
-            print(f'Error: {e}. Please enter the date in the format DD-MM-YYYY.')
+            print(Fore.RED + f'Error: {e}. Please enter the date in the format DD-MM-YYYY.')
 
 def validate_priority():
     """
     Validate task priority input.
 
     Returns:
-        str: Valid priority (low, medium, high) or None if the user exits.
+        str: Valid priority (low, medium, high).
     """
     while True:
         try:
-            priority = input('Enter the priority (low, medium, high) (or type "quit" to exit): ').lower()
+            priority = input(Fore.CYAN + 'Enter the priority (low, medium, high) (or type "quit" to exit): ').lower()
             if priority.lower() in ['quit', 'exit']:
                 return None
             if priority not in ['low', 'medium', 'high']:
                 raise ValueError('Invalid option. Priority should be "low", "medium", or "high".')
             return priority
         except ValueError as e:
-            print(f'Error: {e}')
+            print(Fore.RED + f'Error: {e}')
 
 def validate_category():
     """
     Validate task category input.
 
     Returns:
-        str: Valid category (P for Personal, B for Business) or None if the user exits.
+        str: Valid category (P for Personal, B for Business).
     """
     while True:
         try:
-            category = input('Enter the category: P - (Personal), B - (Business) (or type "quit" to exit): ').upper()
+            category = input(Fore.CYAN + 'Enter the category: P - (Personal), B - (Business) (or type "quit" to exit): ').upper()
             if category.lower() in ['quit', 'exit']:
                 return None
             if len(category) != 1 or category not in ['P', 'B']:
                 raise ValueError('Category should be either "P" for Personal or "B" for Business.')
             return category
         except ValueError as e:
-            print(f'Error: {e}')
+            print(Fore.RED + f'Error: {e}')
 
 def validate_description():
     """
     Validate task description input.
 
     Returns:
-        str: Valid description (maximum 50 characters) or None if the user exits.
+        str: Valid description (up to 50 characters).
     """
     while True:
         try:
-            description = input('Enter the description: (maximum 50 characters, press Enter to skip) (or type "quit" to exit): ')
+            description = input(Fore.CYAN + 'Enter the description: (maximum 50 characters, press Enter to skip) (or type "quit" to exit): ')
             if description.lower() in ['quit', 'exit']:
                 return None
             if len(description) > 50:
@@ -96,7 +98,7 @@ def validate_description():
                 return ""
             return description
         except ValueError as e:
-            print(f'Error: {e}')
+            print(Fore.RED + f'Error: {e}')
 
 def validate_status():
     """
@@ -107,11 +109,11 @@ def validate_status():
     """
     while True:
         try:
-            status = input('Enter the task status : C - (Complete); P - (Pending);  IP - (In Progress) (or type "quit" to exit): ').upper()
+            status = input(Fore.CYAN + 'Enter the task status : C - (Complete); P - (Pending); IP - (In Progress) (or type "quit" to exit): ').upper()
             if status.lower() in ['quit', 'exit']:
                 return None
             if status not in ['C', 'P', 'IP']:
-                raise ValueError('Status should be C - (Complete); P - (Pending);  IP - (In Progress)')
+                raise ValueError('Status should be C - (Complete); P - (Pending); IP - (In Progress)')
             return status
         except ValueError as e:
-            print(f'Error: {e}')
+            print(Fore.RED + f'Error: {e}')

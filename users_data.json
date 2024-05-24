@@ -10,9 +10,34 @@
                     "category": "P",
                     "description": "sleep",
                     "status": "Pending"
+                },
+                {
+                    "name": "pub at 5pm",
+                    "due_date": "24-05-2024",
+                    "priority": "medium",
+                    "category": "P",
+                    "description": "see my family",
+                    "status": "Pending"
                 }
             ],
-            "business": []
+            "business": [
+                {
+                    "name": "create readm",
+                    "due_date": "24-05-2024",
+                    "priority": "low",
+                    "category": "B",
+                    "description": "finish it",
+                    "status": "In Progress"
+                },
+                {
+                    "name": "get paid",
+                    "due_date": "24-05-2024",
+                    "priority": "medium",
+                    "category": "B",
+                    "description": "",
+                    "status": "Pending"
+                }
+            ]
         }
     },
     "paulo": {

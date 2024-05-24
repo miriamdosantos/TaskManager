@@ -4,6 +4,7 @@ import json
 import memcache
 from datetime import datetime
 from cache_utils import set_user_tasks
+from colorama import Fore
 
 
 CATEGORY_MAPPING = {'P': 'personal', 'B': 'business'}
@@ -31,20 +32,20 @@ def list_tasks(user_tasks):
 
     personal_tasks = [task for task in all_tasks if task['category'] == 'P']
     business_tasks = [task for task in all_tasks if task['category'] == 'B']
-
     if personal_tasks:
-        print("Personal Tasks:")
+        print(Fore.MAGENTA + '-'*50)
+        print(f"{Fore.WHITE}{ ' ' * 15} Personal Tasks:")
         for i, task in enumerate(personal_tasks, start=1):
             print_task_details(task, f"P{i}")
     else:
         print("No Personal Tasks")
 
     if business_tasks:
-        print("Business Tasks:")
+        print(f'{ " " * 15} Business Tasks:')
         for i, task in enumerate(business_tasks, start=1):
             print_task_details(task, f"B{i}")
-    else:
-        print("No Business Tasks")
+    
+    
 
 def print_task_details(task, task_id):
     """
@@ -57,30 +58,29 @@ def print_task_details(task, task_id):
     Returns:
         None
     """
-    print(f"Task ID: {task_id}")
-    print(f"Name: {task['name']}")
-    print(f"Due Date : {task['due_date']}")
-    print(f"Priority: {task['priority']}")
-    print(f"Category: {task['category'].capitalize()}")
-    print(f"Description: {task['description']}")
-    print(f"Status: {task['status']}")
-    print("-----------")
-
+    
+    print(Fore.MAGENTA + '-'*50)
+    print(f"{Fore.GREEN}Task ID: {task_id}")
+    print(f"{Fore.GREEN}Name: {task['name']}")
+    print(f"{Fore.GREEN}Due Date: {task['due_date']}")
+    print(f"{Fore.GREEN}Priority: {task['priority']}")
+    print(f"{Fore.GREEN}Description: {task['description']}")
+    print(f"{Fore.GREEN}Status: {task['status']}")
+    print(Fore.MAGENTA + '-'*50)
 
 def sort_tasks_menu(user_tasks):
     """
-    Menu to sort tasks based on different criteria.
+    Display sorting menu and sort tasks based on user input.
 
     Parameters:
-        user_tasks (dict): A dictionary containing user tasks.
+        user_tasks (dict): Dictionary of tasks categorized by personal and business.
 
     Returns:
         None
     """
-    all_tasks = [task for category_tasks in user_tasks.values() for task in category_tasks]
-
+    all_tasks = user_tasks.get('personal', []) + user_tasks.get('business', [])
     if not all_tasks:
-        print("No tasks found for this user.")
+        print(f"{Fore.RED}No tasks available to sort.")
         return
 
     list_tasks(user_tasks)
@@ -90,12 +90,24 @@ def sort_tasks_menu(user_tasks):
         if sort_criteria == 'quit':
             return
         if sort_criteria not in ['name', 'due_date', 'priority', 'status']:
-            print('Invalid sorting criteria. Please enter one of the following: name, due_date, priority, status.')
+            print(f"{Fore.RED}Invalid sorting criteria. Please enter one of the following: name, due_date, priority, status.")
             continue
 
-        sorted_tasks = sorted(all_tasks, key=lambda x: x.get(sort_criteria, ''))
+        if sort_criteria == 'due_date':
+            sorted_tasks = sort_by_due_date(all_tasks)
+        elif sort_criteria == 'priority':
+            print('Sorted tasks priority: High / Medium / Low')
+            sorted_tasks = sort_by_priority(all_tasks)
+        elif sort_criteria == 'status':
+            print('Sorted tasks Status: In Progress / Pending / Complete')
+
+            sorted_tasks = sort_by_status(all_tasks)
+        else:
+            sorted_tasks = sorted(all_tasks, key=lambda x: x.get(sort_criteria, ''))
+
         print_sorted_tasks(sorted_tasks)
         break
+
 
 def print_sorted_tasks(sorted_tasks):
     """
@@ -114,6 +126,18 @@ def print_sorted_tasks(sorted_tasks):
             print_task_details(task, task_id)
     else:
         print("No tasks to display.")
+def sort_by_priority(tasks):
+    """
+    Sort tasks by their priority.
+
+    Parameters:
+        tasks (list): A list of tasks.
+
+    Returns:
+        list: Sorted list of tasks by priority.
+    """
+    priority_order = {"low": 3, "medium": 2, "high": 1}
+    return sorted(tasks, key=lambda x: priority_order.get(x['priority'], float('inf')))
 
 def sort_by_due_date(tasks, reverse=False):
     """

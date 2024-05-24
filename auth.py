@@ -59,14 +59,17 @@ def register_user(users):
     """
     while True:
         try:
-            username = input("Enter username: ").strip()
+            username = input('Enter username or type "quit" if would like to not to register anumore: ').strip()
             if len(username) < 5:
                 raise ValueError("Username must be at least 5 characters long.")
-            
-            password = input("Enter password: ").strip()
+            elif username == 'quit':
+                return
+            password = input('Enter password or type "quit" if would like to not to register anumore: ' ).strip()
             if len(password) < 5:
                 raise ValueError("Password must be at least 5 characters long.")
-            
+            elif password == 'quit':
+                return
+                
             if username in users:
                 print("Username already exists. Please choose a different username.")
             else:
