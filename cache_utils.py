@@ -19,6 +19,10 @@ else:
 mc = memcache.Client([memcached_servers_with_auth], debug=0)
 
 
+# Connect to Memcached
+mc = memcache.Client([memcached_servers_with_auth], debug=0)
+
+
 # Set user tasks in Memcached
 def set_user_tasks(username, tasks):
     """
