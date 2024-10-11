@@ -19,10 +19,10 @@ def setup_google_sheets(sheet_name="Task-Manager"):
         "https://www.googleapis.com/auth/drive"
     ]
 
-    # Check if we are running on Heroku or locally
-    if os.environ.get("HEROKU") == "True":
+    # Load credentials from the environment variable or from a JSON file
+    creds_json = os.environ.get("GOOGLE_SHEET_CREDENTIALS")
+    if creds_json:
         # Load credentials from the environment variable
-        creds_json = os.environ.get("GOOGLE_SHEET_CREDENTIALS")
         creds = ServiceAccountCredentials.from_json_keyfile_dict(json.loads(creds_json), scope)
     else:
         # Load credentials from a JSON keyfile locally
@@ -38,7 +38,8 @@ def setup_google_sheets(sheet_name="Task-Manager"):
     except Exception as e:
         print(f"Error: {str(e)}")
         return None
-   
+
+    
 def load_data_from_sheet():
     """
     Load user data and tasks from the Google Sheet into a dictionary.
