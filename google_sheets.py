@@ -18,16 +18,16 @@ def setup_google_sheets(sheet_name="Task-Manager"):
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/drive"
     ]
-    
-    # Load credentials from the environment variable
-    creds_json = os.environ.get("GOOGLE_SHEET_CREDENTIALS")
-    
-    # Parse the JSON string into a dictionary
-    creds_dict = json.loads(creds_json)
 
-    # Create credentials from the dictionary
-    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-    
+    # Check if we are running on Heroku or locally
+    if os.environ.get("HEROKU") == "True":
+        # Load credentials from the environment variable
+        creds_json = os.environ.get("GOOGLE_SHEET_CREDENTIALS")
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(json.loads(creds_json), scope)
+    else:
+        # Load credentials from a JSON keyfile locally
+        creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+
     try:
         client = gspread.authorize(creds)  # Authorize the client using credentials
         sheet = client.open(sheet_name).sheet1  # Open the first sheet in the spreadsheet
@@ -38,7 +38,7 @@ def setup_google_sheets(sheet_name="Task-Manager"):
     except Exception as e:
         print(f"Error: {str(e)}")
         return None
-
+   
 def load_data_from_sheet():
     """
     Load user data and tasks from the Google Sheet into a dictionary.

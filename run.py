@@ -2,6 +2,7 @@ from auth import login, register_user
 from google_sheets import load_data_from_sheet, save_data_to_sheet
 from tasks import list_tasks, remove_task, update_task, sort_tasks_menu
 from colorama import Fore, init
+from tasks import add_task
 from art import text2art
 
 # Initialize colorama for colored console output
@@ -14,7 +15,6 @@ STATUS_MAPPING = {"C": "Complete", "P": "Pending", "IP": "In Progress"}
 def main():
     """
     Main function to run the Task Manager application.
-
     This function loads user data from Google Sheets, displays the main menu for the user 
     to either register or log in, and navigates them to the task menu upon successful login or registration.
     """
@@ -39,7 +39,6 @@ def main():
             if username:
                 # If registration is successful, navigate to the task menu
                 task_menu(username, users_data)
-
         # Handle user login
         elif choice == "2":
             username = login(users_data)  # Attempt login and return the username if successful
@@ -51,11 +50,30 @@ def main():
         else:
             print(f"{Fore.RED}Invalid choice. Please enter 1 or 2.")
 
-def task_menu(username, users_data):
-    """Display the task menu for the logged-in user."""
+
+def task_menu(username, users):
+    """
+    Display the task menu for the logged-in user.
+
+    Args:
+        username (str): The username of the logged-in user.
+        users (dict): The dictionary containing user data.
+
+    Returns:
+        None
+    """
+    user_data = users.get(username, {})
+    if not user_data:
+        print(Fore.RED + "User not found.")
+        return
+
+    user_tasks = user_data.get("tasks", {})
+    if not user_tasks:
+        print(Fore.RED + "No tasks found for this user.")
+        return
 
     while True:
-        print(Fore.CYAN + text2art(" Task Menu "))
+        print(Fore.CYAN + text2art("Task Menu"))
         print(Fore.YELLOW + "1. Add Task")
         print(Fore.YELLOW + "2. Remove Task")
         print(Fore.YELLOW + "3. Edit Task")
@@ -66,31 +84,32 @@ def task_menu(username, users_data):
         choice = input(Fore.CYAN + "Enter your choice: ")
 
         if choice == "1":
-            # Lógica para adicionar tarefa
-            save_data_to_sheet(users_data)  # Salvar dados após adicionar tarefa
+            add_task(username, users)
         elif choice == "2":
-            remove_task(username, users_data)  # Remover tarefa
-            save_data_to_sheet(users_data)  # Salvar dados após remover tarefa
+            remove_task(username, user_data)
         elif choice == "3":
-            update_task(username, users_data)  # Atualizar tarefa
-            save_data_to_sheet(users_data)  # Salvar dados após atualizar tarefa
+            update_task(username, users)
         elif choice == "4":
-            list_tasks(users_data[username]["tasks"])  # Ver todas as tarefas
+            list_tasks(user_tasks)
         elif choice == "5":
-            sort_tasks_menu(users_data[username]["tasks"])  # Ordenar tarefas
-            save_data_to_sheet(users_data)  # Salvar dados após ordenar tarefas
+            sort_tasks_menu(user_tasks)
         elif choice == "6":
-            print(Fore.GREEN + "Logging out...")
-            save_data_to_sheet(users_data)  # Salvar dados antes de sair
-            break  # Saia do loop de tarefas
+            print(Fore.GREEN + "Logging out.")
+            break
         else:
-            print(f"{Fore.RED}Invalid choice. Please enter a number between 1 and 6.")
+            print(
+                Fore.RED
+                + "Invalid choice. Please enter a number between 1 and 6."
+            )
+
 
 if __name__ == "__main__":
+    users = load_data_from_sheet()
     try:
-        main()  # Run the main function
+        main()
+        save_data_to_sheet(users)
     except Exception as e:
-        print(Fore.RED + f"An error occurred: {e}")
+        pass
     finally:
-        users_data = load_data_from_sheet()  # Load users from the sheet
-        save_data_to_sheet(users_data)  # Ensure that data is saved before exiting
+        # Save data if an exception occurs
+        pass

@@ -19,10 +19,13 @@ def register_user(users_data):
     username = validate_username()
     
     # Check if username already exists
-    if username in users_data:
-        print(f"{Fore.RED}Username already exists.")
-        return None  # Exit if user already exists
-    
+    while True:
+        if username in users_data:
+            print(f"{Fore.RED}Username already exists.")
+            username = validate_username()
+        else:
+            break
+        
     # Validate and hash the user's password
     password = validate_password()
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
