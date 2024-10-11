@@ -1,6 +1,7 @@
+import os
+import json
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-import bcrypt
 
 def setup_google_sheets(sheet_name="Task-Manager"):
     """
@@ -18,8 +19,14 @@ def setup_google_sheets(sheet_name="Task-Manager"):
         "https://www.googleapis.com/auth/drive"
     ]
     
-    # Load credentials from a JSON keyfile
-    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+    # Load credentials from the environment variable
+    creds_json = os.environ.get("GOOGLE_SHEET_CREDENTIALS")
+    
+    # Parse the JSON string into a dictionary
+    creds_dict = json.loads(creds_json)
+
+    # Create credentials from the dictionary
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
     
     try:
         client = gspread.authorize(creds)  # Authorize the client using credentials
