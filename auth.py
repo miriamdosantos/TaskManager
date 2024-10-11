@@ -1,106 +1,71 @@
-# auth.py
+from google_sheets import load_data_from_sheet, save_data_to_sheet, setup_google_sheets
+from colorama import Fore, init
+from validators import validate_username, validate_login_password, validate_password
+import bcrypt
 
-import json
-from colorama import Fore, Style, init
+# Initialize colorama for text formatting
+init(autoreset=True)
 
-# Initialize colorama
-init()
-"""
-    Load user data from the JSON file.
+def register_user(users_data):
+    """
+    Registers a new user in the system.
 
+    Args:
+        users_data (dict): Dictionary containing all user data.
+        
     Returns:
-        dict: A dictionary containing user data.
+        str: The username of the newly registered user, or None if registration failed.
     """
+    username = validate_username()
+    
+    # Check if username already exists
+    if username in users_data:
+        print(f"{Fore.RED}Username already exists.")
+        return None  # Exit if user already exists
+    
+    # Validate and hash the user's password
+    password = validate_password()
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    # Add the new user to the users_data dictionary
+    users_data[username] = {
+        "password": hashed_password,
+        "tasks": {
+            "personal": [],
+            "business": []
+        }
+    }
+    
+    print(f"{Fore.GREEN}User registered successfully.")
+    save_data_to_sheet(users_data)  # Save user data to Google Sheets
+    return username  # Return username if registration was successful
 
 
-def load_user_data():
-    try:
-        with open("users_data.json", "r") as file:
-            return json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
-
-
-def save_user_data(users):
+def login(users_data):
     """
-    Save user data to the JSON file.
+    Handles user login by validating the username and password.
 
-    Parameters:
-        users (dict): A dictionary containing user data.
-
+    Args:
+        users_data (dict): Dictionary containing all user data.
+    
     Returns:
-        None
+        str: The username of the logged-in user, or None if login failed.
     """
-    with open("users_data.json", "w") as file:
-        json.dump(users, file, indent=4)
-
-
-def login_user(users):
-    """
-    Login user.
-
-    Parameters:
-        users (dict): A dictionary containing user data.
-
-    Returns:
-        str: Username of the logged-in user.
-    """
-    while True:
-        username = input("Enter username: ")
-        password = input("Enter password: ")
-
-        if username in users and users[username]["password"] == password:
-            print(
-                f"{Fore.GREEN}Authentication successful! Welcome back, {username}{Style.RESET_ALL}"
-            )
-            return username
-        else:
-            print(
-                f"{Fore.RED}Invalid username or password. Please try again.{Style.RESET_ALL}"
-            )
-
-
-def register_user(users):
-    """
-    Register a new user.
-
-    Parameters:
-        users (dict): A dictionary containing user data.
-
-    Returns:
-        tuple: Username and updated user data.
-    """
-    while True:
-        try:
-            username = input(
-                'Enter username or type "quit" if you would like to not register anymore: '
-            ).strip()
-            if username.lower() == "quit":
-                return None, users
-            if len(username) < 5:
-                raise ValueError("Username must be at least 5 characters long.")
-
-            password = input(
-                'Enter password or type "quit" if you would like to not register anymore: '
-            ).strip()
-            if password.lower() == "quit":
-                return None, users
-            if len(password) < 5:
-                raise ValueError("Password must be at least 5 characters long.")
-
-            if username in users:
-                print(
-                    f"{Fore.RED}Username already exists. Please choose a different username.{Style.RESET_ALL}"
-                )
-            else:
-                users[username] = {
-                    "password": password,
-                    "tasks": {"personal": [], "business": []},
-                }
-                save_user_data(users)
-                print(
-                    f"{Fore.GREEN}User {username} registered successfully!{Style.RESET_ALL}"
-                )
-                return username, users
-        except ValueError as ve:
-            print(f"{Fore.RED}Error: {ve}{Style.RESET_ALL}")
+    username = validate_username()
+    input_password = validate_login_password()
+    
+    # Retrieve the stored password for the provided username
+    stored_password = users_data.get(username, {}).get('password', None)
+    
+    # Check if the username exists
+    if not stored_password:
+        print(f"{Fore.RED}Username not found.")
+        return None  # Return None if username doesn't exist
+    
+    # Check if the input password matches the stored hashed password
+    if bcrypt.checkpw(input_password.encode('utf-8'), stored_password.encode('utf-8')):
+        print(f"{Fore.GREEN}Login successful!")
+        return username  # Return username if login was successful
+    else:
+        print(f"{Fore.RED}Incorrect password. Try again. Returning to main menu.")
+        return None  # Return None if the password is incorrect

@@ -1,167 +1,61 @@
-# run.py
-
-import json
-from auth import *
+from auth import login, register_user
+from google_sheets import load_data_from_sheet, save_data_to_sheet
 from tasks import list_tasks, remove_task, update_task, sort_tasks_menu
-from validators import (
-    validate_name,
-    validate_date,
-    validate_priority,
-    validate_category,
-    validate_description,
-    validate_status,
-)
-import os
-from cache_utils import save_data
-import memcache
-from tasks import remove_task, list_tasks, update_task, sort_tasks_menu
-from auth import load_user_data, save_user_data, login_user, register_user
-from colorama import Fore, Style, init
+from colorama import Fore, init
 from art import text2art
 
+# Initialize colorama for colored console output
 init(autoreset=True)
 
+# Define mappings for task categories and statuses
 CATEGORY_MAPPING = {"P": "personal", "B": "business"}
 STATUS_MAPPING = {"C": "Complete", "P": "Pending", "IP": "In Progress"}
 
-
-def add_task(username, users):
-    """
-    Add a new task for the specified user.
-
-    Args:
-        username (str): The username of the user.
-        users (dict): The dictionary containing user data.
-
-    Returns:
-        None
-    """
-    while True:
-        name = validate_name()
-        if name is None:
-            break
-
-        due_date = validate_date()
-        if due_date is None:
-            break
-
-        priority = validate_priority()
-        if priority is None:
-            break
-
-        category = validate_category()
-        if category is None:
-            break
-
-        description = validate_description()
-        if description is None:
-            break
-
-        status_abbreviation = validate_status()
-        if status_abbreviation is None:
-            break
-
-        status = STATUS_MAPPING.get(status_abbreviation, "Unknown")
-        task = {
-            "name": name,
-            "due_date": due_date,
-            "priority": priority,
-            "category": category,
-            "description": description,
-            "status": status,
-        }
-
-        user_tasks = users[username]["tasks"]
-        if category == "P":
-            user_tasks["personal"].append(task)
-            print(
-                Fore.GREEN + "Task successfully inserted into Personal category"
-            )
-        elif category == "B":
-            user_tasks["business"].append(task)
-            print(
-                Fore.GREEN + "Task successfully inserted into Business category"
-            )
-        else:
-            print(Fore.RED + "Invalid category")
-            continue
-
-        # Save data after adding the new task
-        save_data(username, users)
-
-        while True:
-            try:
-                option = input(
-                    "Would you like to add more tasks? (Y/N) "
-                ).upper()
-                if option not in ["Y", "N"]:
-                    raise ValueError("Invalid input. Please answer: Y or N")
-                elif option == "Y":
-                    break
-                elif option == "N":
-                    return
-            except ValueError as e:
-                print(Fore.RED + f"Error: {e}")
-
-
 def main():
     """
-    Main function for running the Task Manager application.
+    Main function to run the Task Manager application.
 
-    Returns:
-        None
+    This function loads user data from Google Sheets, displays the main menu for the user 
+    to either register or log in, and navigates them to the task menu upon successful login or registration.
     """
-    users = load_user_data()
+    # Load users data from Google Sheets
+    users_data = load_data_from_sheet()
 
+    # Main loop to handle user input and application flow
     while True:
-        print(Fore.CYAN + text2art("Task Manager"))
-        print(
-            Fore.YELLOW
-            + "1. Register - You can easily sign up now to start organizing your tasks"
-        )
+        # Display the Task Manager title using ASCII art
+        print(Fore.CYAN + text2art(" Task Manager "))
+        
+        # Display menu options for Register and Login
+        print(Fore.YELLOW + "1. Register - You can easily sign up now to start organizing your tasks")
         print(Fore.YELLOW + "2. Login - If you already have an account with us")
-        print(Fore.YELLOW + "3. Quit")
+        
+        # Prompt the user to enter their choice
         choice = input(Fore.CYAN + "Enter your choice: ")
 
+        # Handle user registration
         if choice == "1":
-            username, users = register_user(users)
-            if username:  # Check if the registration was not aborted
-                task_menu(username, users)
-        elif choice == "2":
-            username = login_user(users)
+            username = register_user(users_data)  # Register the user and return their username
             if username:
-                task_menu(username, users)
-        elif choice == "3":
-            print(f"{Fore.RED}Quitting the program.")
-            save_data(users)
-            break
+                # If registration is successful, navigate to the task menu
+                task_menu(username, users_data)
+
+        # Handle user login
+        elif choice == "2":
+            username = login(users_data)  # Attempt login and return the username if successful
+            if username:
+                # If login is successful, navigate to the task menu
+                task_menu(username, users_data)
+        
+        # Handle invalid menu choice
         else:
-            print(f"{Fore.RED}Invalid choice. Please enter 1, 2, or 3.")
+            print(f"{Fore.RED}Invalid choice. Please enter 1 or 2.")
 
-
-def task_menu(username, users):
-    """
-    Display the task menu for the logged-in user.
-
-    Args:
-        username (str): The username of the logged-in user.
-        users (dict): The dictionary containing user data.
-
-    Returns:
-        None
-    """
-    user_data = users.get(username, {})
-    if not user_data:
-        print(Fore.RED + "User not found.")
-        return
-
-    user_tasks = user_data.get("tasks", {})
-    if not user_tasks:
-        print(Fore.RED + "No tasks found for this user.")
-        return
+def task_menu(username, users_data):
+    """Display the task menu for the logged-in user."""
 
     while True:
-        print(Fore.CYAN + text2art("Task Menu"))
+        print(Fore.CYAN + text2art(" Task Menu "))
         print(Fore.YELLOW + "1. Add Task")
         print(Fore.YELLOW + "2. Remove Task")
         print(Fore.YELLOW + "3. Edit Task")
@@ -172,32 +66,31 @@ def task_menu(username, users):
         choice = input(Fore.CYAN + "Enter your choice: ")
 
         if choice == "1":
-            add_task(username, users)
+            # Lógica para adicionar tarefa
+            save_data_to_sheet(users_data)  # Salvar dados após adicionar tarefa
         elif choice == "2":
-            remove_task(username, user_data)
+            remove_task(username, users_data)  # Remover tarefa
+            save_data_to_sheet(users_data)  # Salvar dados após remover tarefa
         elif choice == "3":
-            update_task(username, users)
+            update_task(username, users_data)  # Atualizar tarefa
+            save_data_to_sheet(users_data)  # Salvar dados após atualizar tarefa
         elif choice == "4":
-            list_tasks(user_tasks)
+            list_tasks(users_data[username]["tasks"])  # Ver todas as tarefas
         elif choice == "5":
-            sort_tasks_menu(user_tasks)
+            sort_tasks_menu(users_data[username]["tasks"])  # Ordenar tarefas
+            save_data_to_sheet(users_data)  # Salvar dados após ordenar tarefas
         elif choice == "6":
-            print(Fore.GREEN + "Logging out.")
-            break
+            print(Fore.GREEN + "Logging out...")
+            save_data_to_sheet(users_data)  # Salvar dados antes de sair
+            break  # Saia do loop de tarefas
         else:
-            print(
-                Fore.RED
-                + "Invalid choice. Please enter a number between 1 and 6."
-            )
-
+            print(f"{Fore.RED}Invalid choice. Please enter a number between 1 and 6.")
 
 if __name__ == "__main__":
-    users = load_user_data()
     try:
-        main()
-        save_data(users)
+        main()  # Run the main function
     except Exception as e:
-        pass
+        print(Fore.RED + f"An error occurred: {e}")
     finally:
-        # Save data if an exception occurs
-        pass
+        users_data = load_data_from_sheet()  # Load users from the sheet
+        save_data_to_sheet(users_data)  # Ensure that data is saved before exiting

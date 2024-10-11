@@ -1,15 +1,74 @@
 # tasks.py
 
-import json
-import memcache
+
 from datetime import datetime
-from cache_utils import set_user_tasks
-from colorama import Fore
+from colorama import Fore,init
+from google_sheets import save_data_to_sheet
+from validators import *
 
 
 CATEGORY_MAPPING = {"P": "personal", "B": "business"}
 STATUS_MAPPING = {"P": "Pending", "IP": "In Progress", "C": "Complete"}
 
+init(autoreset=True)
+
+
+def add_task(username, users):
+    """
+    Add a new task for the user after validating inputs.
+
+    Parameters:
+        username (str): The username of the user.
+        users (dict): A dictionary containing user data.
+
+    Returns:
+        None
+    """
+    # Validate inputs
+    name = validate_name()
+    if name is None:
+        return  # Exit if the user chose to quit
+
+    due_date = validate_date()
+    if due_date is None:
+        return  # Exit if the user chose to quit
+
+    priority = validate_priority()
+    if priority is None:
+        return  # Exit if the user chose to quit
+
+    category = validate_category()
+    if category is None:
+        return  # Exit if the user chose to quit
+
+    description = validate_description()
+    if description is None:
+        return  # Exit if the user chose to quit
+
+    status = validate_status()
+    if status is None:
+        return  # Exit if the user chose to quit
+
+    # Create the task dictionary
+    task = {
+        "name": name,
+        "due_date": due_date,
+        "priority": priority,
+        "category": category,
+        "description": description,
+        "status": status,
+    }
+
+    # Add the task to the user's task list
+    if category in users[username]["tasks"]:
+        users[username]["tasks"][category].append(task)
+    else:
+        users[username]["tasks"][category] = [task]
+
+    # Save the updated users data to Google Sheets
+    save_data_to_sheet(users)
+
+    print(Fore.GREEN + "Task added successfully!")
 
 def list_tasks(user_tasks):
     """
@@ -28,7 +87,7 @@ def list_tasks(user_tasks):
     ]
 
     if not all_tasks:
-        print("No tasks found for this user.")
+        print(f"{Fore.RED} No tasks found for this user.")
         return
 
     personal_tasks = [task for task in all_tasks if task["category"] == "P"]
@@ -47,6 +106,11 @@ def list_tasks(user_tasks):
             print_task_details(task, f"B{i}")
 
 
+
+
+# Inicializa o colorama
+
+
 def print_task_details(task, task_id):
     """
     Print details of a task.
@@ -58,7 +122,6 @@ def print_task_details(task, task_id):
     Returns:
         None
     """
-
     print(Fore.MAGENTA + "-" * 50)
     print(f"{Fore.GREEN}Task ID: {task_id}")
     print(f"{Fore.GREEN}Name: {task['name']}")
@@ -84,7 +147,7 @@ def sort_tasks_menu(user_tasks):
         print(f"{Fore.RED}No tasks available to sort.")
         return
 
-    list_tasks(user_tasks)
+    list_tasks(user_tasks)  # Presumindo que a função list_tasks existe
 
     while True:
         sort_criteria = (
@@ -109,7 +172,6 @@ def sort_tasks_menu(user_tasks):
             sorted_tasks = sort_by_priority(all_tasks)
         elif sort_criteria == "status":
             print("Sorted tasks Status: In Progress / Pending / Complete")
-
             sorted_tasks = sort_by_status(all_tasks)
         else:
             sorted_tasks = sorted(
@@ -157,13 +219,13 @@ def sort_by_priority(tasks):
 
 def sort_by_due_date(tasks, reverse=False):
     """
-    Sort tasks by their status.
+    Sort tasks by their due date.
 
     Parameters:
         tasks (list): A list of tasks.
 
     Returns:
-        list: Sorted list of tasks by status.
+        list: Sorted list of tasks by due date.
     """
     return sorted(
         tasks,
@@ -188,28 +250,26 @@ def sort_by_status(tasks):
     )
 
 
-def remove_task(username, user_data):
+def remove_task(username, users):
     """
     Remove a task for the user.
 
     Parameters:
         username (str): Username of the user.
-        user_data (dict): A dictionary containing user data.
+        users (dict): A dictionary containing user data.
 
     Returns:
         None
     """
-    user_tasks = user_data.get("tasks", {})
+    user_tasks = users.get(username, {}).get("tasks", {})
     if not user_tasks:
-        print("No tasks found for this user.")
+        print(f"{Fore.RED} No tasks found for this user.") 
         return
 
-    list_tasks(user_tasks)
+    list_tasks(user_tasks)  # Presumindo que a função list_tasks existe
 
     while True:
-        task_id = input(
-            'Enter the Task ID to remove (e.g., P1, B2) or type "quit" to exit: '
-        ).strip()
+        task_id = input('Enter the Task ID to remove (e.g., P1, B2) or type "quit" to exit: ').strip()
         if task_id.lower() in ["quit", "exit"]:
             return
         if not task_id or len(task_id) < 2:
@@ -218,32 +278,27 @@ def remove_task(username, user_data):
 
         category_code = task_id[0].upper()
         if category_code not in CATEGORY_MAPPING:
-            print(
-                'Invalid Task ID format. It should start with "P" or "B" followed by a number.'
-            )
+            print('Invalid Task ID format. It should start with "P" or "B" followed by a number.')
             continue
 
         category = CATEGORY_MAPPING[category_code]
+        tasks_in_category = user_tasks.get(category, [])
+
         try:
             task_index = int(task_id[1:]) - 1
-            if task_index < 0 or task_index >= len(
-                user_tasks.get(category, [])
-            ):
-                raise ValueError(
-                    "Task ID out of range. Please enter a valid Task ID."
-                )
+            if task_index < 0 or task_index >= len(tasks_in_category):
+                raise ValueError("Task ID out of range. Please enter a valid Task ID.")
         except ValueError as e:
             print(f"Error: {e}")
             continue
 
-        user_tasks[category].pop(task_index)
+        tasks_in_category.pop(task_index)
 
-        # Atualizar o cache com os dados do usuário
-        set_user_tasks(username, user_tasks)
+        # Salvar os dados atualizados de volta na planilha
+        save_data_to_sheet(users)
 
         print("Task removed successfully.")
         break
-
 
 def update_task(username, users):
     """
@@ -259,87 +314,57 @@ def update_task(username, users):
     user_data = users.get(username, {})
     user_tasks = user_data.get("tasks", {})
     if not user_tasks:
-        print("No tasks found for this user.")
+        print(f"{Fore.RED}No tasks found for this user.")
         return
 
     while True:
-        category_code = (
-            input(
-                "Enter the category to update (P for Personal, B for Business), or type 'quit' to exit: "
-            )
-            .strip()
-            .upper()
-        )
+        category_code = input("Enter the category to update (P for Personal, B for Business), or type 'quit' to exit: ").strip().upper()
         if category_code == "QUIT":
             return
         if category_code not in CATEGORY_MAPPING:
-            print(
-                "Error: Invalid category. Please enter 'P' for Personal or 'B' for Business."
-            )
+            print(f"{Fore.RED}Error: Invalid category. Please enter 'P' for Personal or 'B' for Business.")
             continue
 
         category = CATEGORY_MAPPING[category_code]
         tasks_in_category = user_tasks.get(category, [])
 
         if not tasks_in_category:
-            print(f"{category} Tasks are empty.")
+            print(f"{Fore.RED}{category} Tasks are empty.")
             continue
 
-        list_tasks({category: tasks_in_category})
+        list_tasks({category: tasks_in_category})  # Presumindo que a função list_tasks existe
 
-        task_id = (
-            input(
-                f"Enter the Task ID to update in category {category_code} (e.g., {category_code}1), or type 'quit' to exit: "
-            )
-            .strip()
-            .upper()
-        )
+        task_id = input(f"Enter the Task ID to update in category {category_code} (e.g., {category_code}1), or type 'quit' to exit: ").strip().upper()
         if task_id == "QUIT":
             return
         if not task_id.startswith(category_code) or len(task_id) < 2:
-            print(
-                "Invalid Task ID format. Please ensure it matches the format (e.g., P1, B2)."
-            )
+            print(f"{Fore.RED}Invalid Task ID format. Please ensure it matches the format (e.g., P1, B2).")
             continue
 
         try:
             task_index = int(task_id[1:]) - 1
             if task_index < 0 or task_index >= len(tasks_in_category):
-                print("Task ID out of range. Please enter a valid Task ID.")
+                print(f"{Fore.RED}Task ID out of range. Please enter a valid Task ID.")
                 continue
         except ValueError:
-            print(
-                "Invalid Task ID format. Please ensure it ends with a number (e.g., P1, B2)."
-            )
+            print(f"{Fore.RED}Invalid Task ID format. Please ensure it ends with a number (e.g., P1, B2).")
             continue
 
         task = tasks_in_category[task_index]
         print("Current task details:")
         print_task_details(task, task_id)
 
-        task["name"] = input(
-            "Enter new task name (leave blank to keep current): "
-        )
-        task["due_date"] = input(
-            "Enter new due date (leave blank to keep current): "
-        )
-        task["priority"] = input(
-            "Enter new priority (low, medium, high; leave blank to keep current): "
-        ).lower()
-        task["description"] = input(
-            "Enter new description (leave blank to keep current): "
-        )
-        task["status"] = input(
-            "Enter new status (Not Started, In Progress, Complete; leave blank to keep current): "
-        ).upper()
+        task["name"] = input("Enter new task name (leave blank to keep current): ") or task["name"]
+        task["due_date"] = input("Enter new due date (leave blank to keep current): ") or task["due_date"]
+        task["priority"] = input("Enter new priority (low, medium, high; leave blank to keep current): ").lower() or task["priority"]
+        task["description"] = input("Enter new description (leave blank to keep current): ") or task["description"]
+        task["status"] = input("Enter new status (Not Started, In Progress, Complete; leave blank to keep current): ").upper() or task["status"]
 
-        # Atualizar o arquivo JSON com os dados do usuário
-        with open("users_data.json", "w") as file:
-            json.dump(users, file, indent=4)
+        # Salvar os dados atualizados de volta na planilha
+        save_data_to_sheet(users)
 
-        print("Task updated successfully.")
+        print(f"{Fore.GREEN}Task updated successfully.")
         break
-
 
 def update_field_menu(task):
     """
@@ -378,7 +403,7 @@ def update_field_menu(task):
                 task["priority"] = new_priority
             else:
                 print(
-                    "Invalid priority. Please enter 'high', 'medium', or 'low'."
+                    f"{Fore.RED}Invalid priority. Please enter 'high', 'medium', or 'low'."
                 )
         elif field_choice == "4":
             new_description = input("Enter the new description for the task: ")
@@ -391,12 +416,12 @@ def update_field_menu(task):
                 task["status"] = new_status
             else:
                 print(
-                    "Invalid status. Please enter 'P' for Pending, 'IP' for In Progress, or 'C' for Complete."
+                    f"{Fore.RED}Invalid status. Please enter 'P' for Pending, 'IP' for In Progress, or 'C' for Complete."
                 )
         elif field_choice == "6":
             break  # Volta para o menu principal
         else:
-            print("Invalid choice. Please enter a number between 1 and 6.")
+            print(f"{Fore.RED}Invalid choice. Please enter a number between 1 and 6.")
 
 
 def check_empty_list(tasks, message):
@@ -414,3 +439,6 @@ def check_empty_list(tasks, message):
         print(message)
         return True
     return False
+
+
+

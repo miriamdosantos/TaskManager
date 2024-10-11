@@ -151,3 +151,48 @@ def validate_status():
             return status
         except ValueError as e:
             print(Fore.RED + f"Error: {e}")
+from colorama import Fore  # Ensure you have colorama imported for colored output
+
+def validate_username():
+    while True:
+        try:
+            name = input(Fore.CYAN + 'Enter your Username: ')
+            name = name.strip()  # Remove leading/trailing whitespace
+            
+            # Check if the name is empty
+            if not name:
+                raise ValueError("Invalid name. Please provide a name, can't be empty.")
+
+            # Check if the length of the name is less than 5
+            # Check if the username contains only alphabetic characters
+            if not name.isalpha():
+                raise ValueError("Username can only contain alphabetic characters.")
+            
+            if len(name) < 4:
+                raise ValueError("Username has to have at least 5 characters.")
+        
+            return name  # Return the name if validation is successful
+            
+        except ValueError as e:
+            print(Fore.RED + f"Error: {e}")
+
+def validate_password():
+    while True:
+        try:
+            password = input("Enter your password: ").strip()
+            if len(password) < 5:
+                raise ValueError("For better security, the password must have at least 5 characters.")
+            return password
+        except ValueError as e:
+            print(Fore.RED + f"Error: {e}")
+
+def validate_login_password():
+    while True:
+        try:
+            password = input("Enter your password: ").strip()
+            if not password:
+                raise ValueError("Password cannot be empty.")
+            return password
+        except ValueError as e:
+            print(Fore.RED + f"Error: {e}")
+
