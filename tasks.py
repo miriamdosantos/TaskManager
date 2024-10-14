@@ -3,6 +3,7 @@
 
 from datetime import datetime
 from colorama import Fore,init
+import  shortuuid
 from google_sheets import save_data_to_sheet
 from validators import *
 
@@ -26,33 +27,34 @@ def add_task(username, users):
     """
     # Validate inputs
     name = validate_name()
-    if  name is None:
+    if name is None:
         print(f"{Fore.LIGHTYELLOW_EX}Back to TaskMenu!")
         return
 
     due_date = validate_date()
     if due_date is None:
         print(f"{Fore.LIGHTYELLOW_EX}Back to TaskMenu!")
-        return  # Exit if the user chose to quit
+        return
 
     priority = validate_priority()
     if priority is None:
-        return  # Exit if the user chose to quit
+        return
 
     category = validate_category()
     if category is None:
-        return  # Exit if the user chose to quit
+        return
 
     description = validate_description()
     if description is None:
-        return  # Exit if the user chose to quit
+        return
 
     status = validate_status()
     if status is None:
-        return  # Exit if the user chose to quit
+        return
 
-    # Create the task dictionary
+    # Create the task dictionary with a unique ID
     task = {
+        "id": shortuuid.uuid()[:4],  # Generate a unique ID
         "name": name,
         "due_date": due_date,
         "priority": priority,
@@ -62,10 +64,7 @@ def add_task(username, users):
     }
 
     # Add the task to the user's task list
-    if category in users[username]["tasks"]:
-        users[username]["tasks"][category].append(task)
-    else:
-        users[username]["tasks"][category] = [task]
+    users[username]["tasks"].setdefault(category, []).append(task)
 
     # Save the updated users data to Google Sheets
     save_data_to_sheet(users)
@@ -85,10 +84,17 @@ def list_tasks(username, users):
     """
     user_data = users.get(username, {})
     user_tasks = user_data.get("tasks", {})
-    
-    personal_tasks = user_tasks.get("personal", [])
-    business_tasks = user_tasks.get("business", [])
-    
+
+    # Use um filtro para encontrar tarefas pessoais e de negócios
+    personal_tasks = [
+        task for task in user_tasks.get("personal", [])
+        if task["category"] in ["p", "personal"]
+    ]
+    business_tasks = [
+        task for task in user_tasks.get("business", [])
+        if task["category"] in ["b", "business"]
+    ]
+
     if not personal_tasks and not business_tasks:
         print(Fore.RED + "No tasks found for this user.")
         return
@@ -97,8 +103,8 @@ def list_tasks(username, users):
     if personal_tasks:
         print(Fore.MAGENTA + "-" * 50)
         print(f"{Fore.WHITE}{' ' * 15} Personal Tasks:")
-        for i, task in enumerate(personal_tasks, start=1):
-            print_task_details(task, f"P{i}")
+        for task in personal_tasks:
+            print_task_details(task)
     else:
         print("No Personal Tasks")
 
@@ -106,25 +112,24 @@ def list_tasks(username, users):
     if business_tasks:
         print(Fore.MAGENTA + "-" * 50)
         print(f"{' ' * 15} Business Tasks:")
-        for i, task in enumerate(business_tasks, start=1):
-            print_task_details(task, f"B{i}")
+        for task in business_tasks:
+            print_task_details(task)
     else:
         print("No Business Tasks")
 
 
-def print_task_details(task, task_id):
+def print_task_details(task):
     """
     Print details of a task.
 
     Parameters:
         task (dict): A dictionary representing a task.
-        task_id (str): ID of the task.
 
     Returns:
         None
     """
     print(Fore.MAGENTA + "-" * 50)
-    print(f"{Fore.GREEN}Task ID: {task_id}")
+    print(f"{Fore.GREEN}Task ID: {task['id']}")
     print(f"{Fore.GREEN}Name: {task['name']}")
     print(f"{Fore.GREEN}Due Date: {task['due_date']}")
     print(f"{Fore.GREEN}Priority: {task['priority']}")
@@ -262,43 +267,32 @@ def remove_task(username, users):
         None
     """
     user_tasks = users.get(username, {}).get("tasks", {})
+
     if not user_tasks:
-        print(f"{Fore.RED} No tasks found for this user.") 
+        print(f"{Fore.RED}No tasks found for this user.")
         return
 
-    list_tasks(user_tasks)  # Presumindo que a função list_tasks existe
+    list_tasks(username, users)  # List tasks before removal
 
     while True:
-        task_id = input('Enter the Task ID to remove (e.g., P1, B2) or type "quit" to exit: ').strip()
+        task_id = input('Enter the Task ID to remove (or type "quit" to exit): ').strip()
         if task_id.lower() in ["quit", "exit"]:
             return
-        if not task_id or len(task_id) < 2:
-            print("Please enter a valid Task ID.")
-            continue
 
-        category_code = task_id[0].upper()
-        if category_code not in CATEGORY_MAPPING:
-            print('Invalid Task ID format. It should start with "P" or "B" followed by a number.')
-            continue
+        task_found = False
+        for _, tasks in user_tasks.items():  # Ignoring the category variable
+            for i in range(len(tasks)):
+                if tasks[i].get('id') == task_id:  # Use get() to avoid KeyError
+                    task_found = True
+                    removed_task = tasks.pop(i)  # Remove the task
+                    print(f"{Fore.GREEN}Task '{removed_task['name']}' removed successfully.")
+                    save_data_to_sheet(users)  # Save changes
+                    break  # Break out of the inner loop
+            if task_found:
+                break  # Break out of the outer loop
 
-        category = CATEGORY_MAPPING[category_code]
-        tasks_in_category = user_tasks.get(category, [])
-
-        try:
-            task_index = int(task_id[1:]) - 1
-            if task_index < 0 or task_index >= len(tasks_in_category):
-                raise ValueError("Task ID out of range. Please enter a valid Task ID.")
-        except ValueError as e:
-            print(f"Error: {e}")
-            continue
-
-        tasks_in_category.pop(task_index)
-
-        # Salvar os dados atualizados de volta na planilha
-        save_data_to_sheet(users)
-
-        print("Task removed successfully.")
-        break
+        if not task_found:
+            print(f"{Fore.RED}Invalid Task ID. Please try again.")
 
 def update_task(username, users):
     """

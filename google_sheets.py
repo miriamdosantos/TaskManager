@@ -76,22 +76,26 @@ def load_data_from_sheet():
     for record in task_data:
         if 'Username' in record:
             username = record['Username']
-            task = {
-                "name": record['Task Name'],
-                "due_date": record['Due Date'],
-                "priority": record['Priority'],
-                "category": record['Category'].lower(),  # Convert to lowercase for consistency
-                "description": record['Description'],
-                "status": record['Status']
-            }
 
-            # Map the category properly
-            category = "personal" if task["category"] in ["p", "personal"] else "business" if task["category"] in ["b", "business"] else None
+            # Check if 'Task ID' exists in the record
+            if 'Task ID' in record:
+                task = {
+                    "id": record['Task ID'],  # Load the task ID
+                    "name": record['Task Name'],
+                    "due_date": record['Due Date'],
+                    "priority": record['Priority'],
+                    "category": record['Category'].lower(),
+                    "description": record['Description'],
+                    "status": record['Status']
+                }
 
-            if category and username in users_data:
-                users_data[username]["tasks"][category].append(task)
+                category = "personal" if task["category"] in ["p", "personal"] else "business" if task["category"] in ["b", "business"] else None
 
-    
+                if category and username in users_data:
+                    users_data[username]["tasks"][category].append(task)
+            else:
+                print(f"Warning: 'Task ID' not found for record: {record}")
+
     return users_data
 
 
@@ -122,21 +126,22 @@ def save_data_to_sheet(users_data):
             existing_users.add(username)
 
     # Update the task worksheet
-    existing_tasks = set((record['Username'], record['Task Name'], record['Due Date']) 
+    existing_tasks = set((record['Username'], record['Task ID'], record['Task Name'], record['Due Date']) 
                          for record in task_sheet.get_all_records())
 
     # Add header to the task sheet if it is empty
     if not existing_tasks:
-        task_sheet.append_row(["Username", "Task Name", "Due Date", "Priority", "Category", "Description", "Status"])
+        task_sheet.append_row(["Username", "Task ID", "Task Name", "Due Date", "Priority", "Category", "Description", "Status"])
 
     for username, user_info in users_data.items():
         for category, tasks in user_info["tasks"].items():
             for task in tasks:
-                task_id = (username, task["name"], task["due_date"])
+                task_id = (username, task["id"], task["name"], task["due_date"])
                 
                 if task_id not in existing_tasks:
                     task_sheet.append_row([
                         username,
+                        task["id"],  # Inclui o ID da tarefa
                         task["name"],
                         task["due_date"],
                         task["priority"],
