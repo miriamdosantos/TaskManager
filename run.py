@@ -1,6 +1,6 @@
 from auth import login, register_user
 from google_sheets import load_data_from_sheet, save_data_to_sheet
-from tasks import list_tasks, remove_task, update_task, sort_tasks_menu
+from tasks import list_tasks, remove_task, update_task,  sort_tasks_menu
 from colorama import Fore, init
 from tasks import add_task
 from art import text2art
@@ -69,9 +69,9 @@ def task_menu(username, users):
     while True:
         print(Fore.CYAN + text2art("Task Menu"))
         print(Fore.YELLOW + "1. Add Task")
-        print(Fore.YELLOW + "2. Remove Task")
+        print(Fore.YELLOW + "2. View All Tasks ")
         print(Fore.YELLOW + "3. Edit Task")
-        print(Fore.YELLOW + "4. View All Tasks")
+        print(Fore.YELLOW + "4. Remove Task")
         print(Fore.YELLOW + "5. Sort Tasks")
         print(Fore.YELLOW + "6. Logout")
 
@@ -80,11 +80,13 @@ def task_menu(username, users):
         if choice == "1":
             add_task(username, users)
         elif choice == "2":
-            remove_task(username, users)
+            list_tasks(username, users)
+            
         elif choice == "3":
             update_task(username, users)
         elif choice == "4":
-            list_tasks(username, users)
+            remove_task(username, users)
+            
         #elif choice == "5":
         #    sort_tasks_menu(user_tasks)
         elif choice == "6":

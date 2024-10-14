@@ -7,25 +7,23 @@ CATEGORY_MAPPING = {"P": "personal", "B": "business"}
 STATUS_MAPPING = {"P": "Pending", "IP": "In Progress", "C": "Complete"}
 
 
-def validate_name():
+def validate_name(prompt_message="Enter the task name (or type 'quit' to exit): "):
     """
-    Validate task name input.
+    Validate task name input with a custom prompt message.
+
+    Parameters:
+        prompt_message (str): The message displayed when asking for input.
 
     Returns:
-        str: Valid task name.
+        str: Valid task name, or None if the user types 'quit'.
     """
     while True:
         try:
-            name = input(
-                Fore.CYAN + 'Enter the task name (or type "quit" to exit): '
-            )
+            name = input(Fore.CYAN + prompt_message)
             if not name.strip():
-                raise ValueError(
-                    "Invalid name. Please provide a name, can't be empty."
-                )
-            if name.lower() in "quit":
+                raise ValueError("Invalid name. Please provide a name, can't be empty.")
+            if name.lower() == "quit":
                 return None
-            
             if len(name) < 5:
                 raise ValueError("Task name has to have at least 5 characters.")
             return name
@@ -35,8 +33,7 @@ def validate_name():
 
 
 
-
-def validate_date():
+def validate_date(prompt_message ="Enter the due date (DD-MM-YYYY) (or type 'quit' to exit): "):
     """
     Validate task due date input.
 
@@ -47,7 +44,7 @@ def validate_date():
         try:
             due_date_str = input(
                 Fore.CYAN
-                + "Enter the due date (DD-MM-YYYY) (or type 'quit' to exit): "
+                + prompt_message
             )
             if not due_date_str.strip():
                 raise ValueError(
@@ -74,7 +71,7 @@ def validate_date():
                 + f"Error: {e}. Please enter the date in the format DD-MM-YYYY."
             )
 
-def validate_priority():
+def validate_priority(prompt_message = 'Enter the priority (low, medium, high) (or type "quit" to exit): ' ):
     """
     Validate task priority input.
 
@@ -85,7 +82,7 @@ def validate_priority():
         try:
             priority = input(
                 Fore.CYAN
-                + 'Enter the priority (low, medium, high) (or type "quit" to exit): '
+                + prompt_message
             ).lower()
             if not priority.strip():
                 raise ValueError(
@@ -102,7 +99,7 @@ def validate_priority():
             print(Fore.RED + f"Error: {e}")
 
 
-def validate_category():
+def validate_category(prompt_message = 'Enter the category: P - (Personal), B - (Business) (or type "quit" to exit): '):
     """
     Validate task category input.
 
@@ -113,7 +110,7 @@ def validate_category():
         try:
             category = input(
                 Fore.CYAN
-                + 'Enter the category: P - (Personal), B - (Business) (or type "quit" to exit): '
+                + prompt_message
             ).upper()
             if not category.strip():
                 raise ValueError(
@@ -134,7 +131,7 @@ def validate_category():
             print(Fore.RED + f"Error: {e}")
 
 
-def validate_description():
+def validate_description(prompt_message = 'Enter the description: (maximum 300 characters, press Enter to "skip" or type "quit" to exit): '):
     """
     Validate task description input.
 
@@ -145,7 +142,7 @@ def validate_description():
         try:
             description = input(
                 Fore.CYAN
-                + 'Enter the description: (maximum 300 characters, press Enter to "skip" or type "quit" to exit): '
+                + prompt_message
             )
             if not description.strip():
                 return ""
@@ -161,7 +158,7 @@ def validate_description():
             print(Fore.RED + f"Error: {e}")
 
 
-def validate_status():
+def validate_status(prompt_message = 'Enter the task status : C - (Complete); P - (Pending); IP - (In Progress) (or type "quit" to exit): ' ):
     """
     Validate task status input.
 
@@ -172,7 +169,7 @@ def validate_status():
         try:
             status = input(
                 Fore.CYAN
-                + 'Enter the task status : C - (Complete); P - (Pending); IP - (In Progress) (or type "quit" to exit): '
+                + prompt_message
             ).upper()
             if not status.strip():
                 raise ValueError(

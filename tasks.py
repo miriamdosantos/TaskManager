@@ -5,6 +5,7 @@ from datetime import datetime
 from colorama import Fore,init
 import  shortuuid
 from google_sheets import save_data_to_sheet
+
 from validators import *
 
 
@@ -54,7 +55,7 @@ def add_task(username, users):
 
     # Create the task dictionary with a unique ID
     task = {
-        "id": shortuuid.uuid()[:4],  # Generate a unique ID
+        "id": shortuuid.uuid()[:2].lower(),  # Generate a unique ID
         "name": name,
         "due_date": due_date,
         "priority": priority,
@@ -136,6 +137,162 @@ def print_task_details(task):
     print(f"{Fore.GREEN}Description: {task['description']}")
     print(f"{Fore.GREEN}Status: {task['status']}")
     print(Fore.MAGENTA + "-" * 50)
+
+def remove_task(username, users):
+    """
+    Remove a task for the user.
+
+    Parameters:
+        username (str): Username of the user.
+        users (dict): A dictionary containing user data.
+
+    Returns:
+        None
+    """
+    user_tasks = users.get(username, {}).get("tasks", {})
+
+    if not user_tasks:
+        print(f"{Fore.RED}No tasks found for this user.")
+        return
+
+    list_tasks(username, users)  # List tasks before removal
+
+    while True:
+        task_id = input('Enter the Task ID to remove (or type "quit" to exit): ').strip().lower()
+        if task_id.lower() in ["quit", "exit"]:
+            return
+
+        task_found = False
+        for _, tasks in user_tasks.items():  # Ignoring the category variable
+            for i in range(len(tasks)):
+                if tasks[i].get('id') == task_id:  # Use get() to avoid KeyError
+                    task_found = True
+                    removed_task = tasks.pop(i)  # Remove the task
+                    print(f"{Fore.GREEN}Task '{removed_task['name']}' removed successfully.")
+                    save_data_to_sheet(users)  # Save changes
+                    break  # Break out of the inner loop
+            if task_found:
+                break  # Break out of the outer loop
+
+        if not task_found:
+            print(f"{Fore.RED}Invalid Task ID. Please try again.")
+
+def update_task(username, users):
+    """
+    Update an existing task for the user.
+
+    Parameters:
+        username (str): Username of the user.
+        users (dict): A dictionary containing user data.
+
+    Returns:
+        None
+    """
+    user_tasks = users.get(username, {}).get("tasks", {})
+    if not user_tasks:
+        print(f"{Fore.RED}No tasks found for this user.")
+        return
+
+    while True:
+        list_tasks(username, users)  # Assuming the function list_tasks exists
+        try:
+            task_id = input(f"Enter the Task ID to update, or type 'quit' to exit: ").strip()
+            if task_id.lower() == "quit":
+                return
+            
+            if not task_id:  # Check if task_id is empty
+                raise ValueError("Task ID cannot be empty.")
+            
+            # Check if the task_id exists in user_tasks
+            task_found = False
+            for category, tasks in user_tasks.items():
+                for task in tasks:
+                    if task['id'] == task_id:
+                        task_found = True
+                        update_field_menu(task, users)  # Pass the task to the update menu
+                        break  # Exit the inner loop
+                if task_found:
+                    break  # Exit the outer loop
+            
+            if not task_found:
+                raise ValueError(f"Task ID '{task_id}' does not exist.")
+        
+        except ValueError as e:
+            print(f"{Fore.RED}{e}")  # Print the error message
+
+
+def update_field_menu(task, users):
+    """
+    Update fields of a task and save changes to Google Sheets.
+
+    Parameters:
+        task (dict): A dictionary representing a task.
+        users (dict): The complete user data for saving after updates.
+
+    Returns:
+        None
+    """
+    while True:
+        print("Select field to update:")
+        print("1. Name")
+        print("2. Due Date")
+        print("3. Category")
+        print("4. Priority")
+        print("5. Description")
+        print("6. Status")
+        print("7. Back to Main List Task to edit another task or quit")
+        
+        
+        field_choice = input("Enter your choice: ")
+
+        if field_choice == "1":
+            new_name = validate_name("Enter the new name for the task (or type 'quit' to exit): ")
+            if new_name is not None:
+                task["name"] = new_name
+                save_data_to_sheet(users)
+                print(f"{Fore.GREEN}Task name updated successfully.")
+
+        elif field_choice == "2":
+            new_due_date = validate_date("Enter the new due date for the task (YYYY-MM-DD): ")
+            if new_due_date is not None:
+                task["due_date"] = new_due_date
+                save_data_to_sheet(users)
+                print(f"{Fore.GREEN}Task due date updated successfully.")
+
+        elif field_choice == "3":
+            new_category = validate_category("Enter the new category for the task (P - Personal) or (B- Business): ")
+            if new_category is not None:
+                task["category"] = new_category
+                save_data_to_sheet(users)
+                print(f"{Fore.GREEN}Task category updated successfully.")
+
+        elif field_choice == "4":
+            new_priority = validate_priority("Enter the new priority for the task (high/medium/low): ").lower()
+            if new_priority is not None:
+                task["priority"] = new_priority
+                save_data_to_sheet(users)
+                print(f"{Fore.GREEN}Task priority updated successfully.")
+
+        elif field_choice == "5":
+            new_description = validate_description("Enter the new description for the task: ")
+            if new_description is not None:
+                task["description"] = new_description
+                save_data_to_sheet(users)
+                print(f"{Fore.GREEN}Task description updated successfully.")
+
+        elif field_choice == "6":
+            new_status = validate_status("Enter the new status for the task (P for Pending, IP for In Progress, C for Complete): ").upper()
+            if new_status is not None:
+                task["status"] = new_status
+                save_data_to_sheet(users)
+                print(f"{Fore.GREEN}Task status updated successfully.")
+
+        elif field_choice == "7":
+            break  # Back to the main menu
+        elif field_choice == "8":
+            return None
+        else:
+            print(f"{Fore.RED}Invalid choice. Please enter a number between 1 and 7.")
 
 def sort_tasks_menu(user_tasks):
     """
@@ -255,167 +412,7 @@ def sort_by_status(tasks):
     )
 
 
-def remove_task(username, users):
-    """
-    Remove a task for the user.
 
-    Parameters:
-        username (str): Username of the user.
-        users (dict): A dictionary containing user data.
-
-    Returns:
-        None
-    """
-    user_tasks = users.get(username, {}).get("tasks", {})
-
-    if not user_tasks:
-        print(f"{Fore.RED}No tasks found for this user.")
-        return
-
-    list_tasks(username, users)  # List tasks before removal
-
-    while True:
-        task_id = input('Enter the Task ID to remove (or type "quit" to exit): ').strip()
-        if task_id.lower() in ["quit", "exit"]:
-            return
-
-        task_found = False
-        for _, tasks in user_tasks.items():  # Ignoring the category variable
-            for i in range(len(tasks)):
-                if tasks[i].get('id') == task_id:  # Use get() to avoid KeyError
-                    task_found = True
-                    removed_task = tasks.pop(i)  # Remove the task
-                    print(f"{Fore.GREEN}Task '{removed_task['name']}' removed successfully.")
-                    save_data_to_sheet(users)  # Save changes
-                    break  # Break out of the inner loop
-            if task_found:
-                break  # Break out of the outer loop
-
-        if not task_found:
-            print(f"{Fore.RED}Invalid Task ID. Please try again.")
-
-def update_task(username, users):
-    """
-    Update an existing task for the user.
-
-    Parameters:
-        username (str): Username of the user.
-        users (dict): A dictionary containing user data.
-
-    Returns:
-        None
-    """
-    user_data = users.get(username, {})
-    user_tasks = user_data.get("tasks", {})
-    if not user_tasks:
-        print(f"{Fore.RED}No tasks found for this user.")
-        return
-
-    while True:
-        category_code = input("Enter the category to update (P for Personal, B for Business), or type 'quit' to exit: ").strip().upper()
-        if category_code == "QUIT":
-            return
-        if category_code not in CATEGORY_MAPPING:
-            print(f"{Fore.RED}Error: Invalid category. Please enter 'P' for Personal or 'B' for Business.")
-            continue
-
-        category = CATEGORY_MAPPING[category_code]
-        tasks_in_category = user_tasks.get(category, [])
-
-        if not tasks_in_category:
-            print(f"{Fore.RED}{category} Tasks are empty.")
-            continue
-
-        list_tasks({category: tasks_in_category})  # Presumindo que a função list_tasks existe
-
-        task_id = input(f"Enter the Task ID to update in category {category_code} (e.g., {category_code}1), or type 'quit' to exit: ").strip().upper()
-        if task_id == "QUIT":
-            return
-        if not task_id.startswith(category_code) or len(task_id) < 2:
-            print(f"{Fore.RED}Invalid Task ID format. Please ensure it matches the format (e.g., P1, B2).")
-            continue
-
-        try:
-            task_index = int(task_id[1:]) - 1
-            if task_index < 0 or task_index >= len(tasks_in_category):
-                print(f"{Fore.RED}Task ID out of range. Please enter a valid Task ID.")
-                continue
-        except ValueError:
-            print(f"{Fore.RED}Invalid Task ID format. Please ensure it ends with a number (e.g., P1, B2).")
-            continue
-
-        task = tasks_in_category[task_index]
-        print("Current task details:")
-        print_task_details(task, task_id)
-
-        task["name"] = input("Enter new task name (leave blank to keep current): ") or task["name"]
-        task["due_date"] = input("Enter new due date (leave blank to keep current): ") or task["due_date"]
-        task["priority"] = input("Enter new priority (low, medium, high; leave blank to keep current): ").lower() or task["priority"]
-        task["description"] = input("Enter new description (leave blank to keep current): ") or task["description"]
-        task["status"] = input("Enter new status (Not Started, In Progress, Complete; leave blank to keep current): ").upper() or task["status"]
-
-        # Salvar os dados atualizados de volta na planilha
-        save_data_to_sheet(users)
-
-        print(f"{Fore.GREEN}Task updated successfully.")
-        break
-
-def update_field_menu(task):
-    """
-    Update fields of a task.
-
-    Parameters:
-        task (dict): A dictionary representing a task.
-
-    Returns:
-        None
-    """
-    while True:
-        print("Select field to update:")
-        print("1. Name")
-        print("2. Due Date")
-        print("3. Priority")
-        print("4. Description")
-        print("5. Status")
-        print("6. Back to main menu")
-
-        field_choice = input("Enter your choice: ")
-
-        if field_choice == "1":
-            new_name = input("Enter the new name for the task: ")
-            task["name"] = new_name
-        elif field_choice == "2":
-            new_due_date = input(
-                "Enter the new due date for the task (YYYY-MM-DD): "
-            )
-            task["due_date"] = new_due_date
-        elif field_choice == "3":
-            new_priority = input(
-                "Enter the new priority for the task (high/medium/low): "
-            ).lower()
-            if new_priority in ["high", "medium", "low"]:
-                task["priority"] = new_priority
-            else:
-                print(
-                    f"{Fore.RED}Invalid priority. Please enter 'high', 'medium', or 'low'."
-                )
-        elif field_choice == "4":
-            new_description = input("Enter the new description for the task: ")
-            task["description"] = new_description
-        elif field_choice == "5":
-            new_status = input(
-                "Enter the new status for the task (P for Pending, IP for In Progress, C for Complete): "
-            ).upper()
-            if new_status in ["P", "IP", "C"]:
-                task["status"] = new_status
-            else:
-                print(
-                    f"{Fore.RED}Invalid status. Please enter 'P' for Pending, 'IP' for In Progress, or 'C' for Complete."
-                )
-        elif field_choice == "6":
-            break  # Volta para o menu principal
-        else:
-            print(f"{Fore.RED}Invalid choice. Please enter a number between 1 and 6.")
 
 
 def check_empty_list(tasks, message):
