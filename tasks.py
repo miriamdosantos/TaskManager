@@ -72,45 +72,44 @@ def add_task(username, users):
 
     print(Fore.GREEN + "Task added successfully!")
 
-def list_tasks(user_tasks):
+def list_tasks(username, users):
     """
     List all tasks for the user.
 
     Parameters:
-        user_tasks (dict): A dictionary containing user tasks.
+        username (str): The username of the user.
+        users (dict): A dictionary containing user data.
 
     Returns:
         None
     """
-    all_tasks = [
-        task
-        for category_tasks in user_tasks.values()
-        for task in category_tasks
-    ]
-
-    if not all_tasks:
-        print(f"{Fore.RED} No tasks found for this user.")
+    user_data = users.get(username, {})
+    user_tasks = user_data.get("tasks", {})
+    
+    personal_tasks = user_tasks.get("personal", [])
+    business_tasks = user_tasks.get("business", [])
+    
+    if not personal_tasks and not business_tasks:
+        print(Fore.RED + "No tasks found for this user.")
         return
 
-    personal_tasks = [task for task in all_tasks if task["category"] == "P"]
-    business_tasks = [task for task in all_tasks if task["category"] == "B"]
+    # Display personal tasks
     if personal_tasks:
         print(Fore.MAGENTA + "-" * 50)
-        print(f"{Fore.WHITE}{ ' ' * 15} Personal Tasks:")
+        print(f"{Fore.WHITE}{' ' * 15} Personal Tasks:")
         for i, task in enumerate(personal_tasks, start=1):
             print_task_details(task, f"P{i}")
     else:
         print("No Personal Tasks")
 
+    # Display business tasks
     if business_tasks:
-        print(f'{ " " * 15} Business Tasks:')
+        print(Fore.MAGENTA + "-" * 50)
+        print(f"{' ' * 15} Business Tasks:")
         for i, task in enumerate(business_tasks, start=1):
             print_task_details(task, f"B{i}")
-
-
-
-
-# Inicializa o colorama
+    else:
+        print("No Business Tasks")
 
 
 def print_task_details(task, task_id):
@@ -132,7 +131,6 @@ def print_task_details(task, task_id):
     print(f"{Fore.GREEN}Description: {task['description']}")
     print(f"{Fore.GREEN}Status: {task['status']}")
     print(Fore.MAGENTA + "-" * 50)
-
 
 def sort_tasks_menu(user_tasks):
     """

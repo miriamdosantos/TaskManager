@@ -80,14 +80,20 @@ def load_data_from_sheet():
                 "name": record['Task Name'],
                 "due_date": record['Due Date'],
                 "priority": record['Priority'],
-                "category": record['Category'],
+                "category": record['Category'].lower(),  # Convert to lowercase for consistency
                 "description": record['Description'],
                 "status": record['Status']
             }
-            if username in users_data and task["category"] in users_data[username]["tasks"]:
-                users_data[username]["tasks"][task["category"]].append(task)
 
+            # Map the category properly
+            category = "personal" if task["category"] in ["p", "personal"] else "business" if task["category"] in ["b", "business"] else None
+
+            if category and username in users_data:
+                users_data[username]["tasks"][category].append(task)
+
+    
     return users_data
+
 
 def save_data_to_sheet(users_data):
     """

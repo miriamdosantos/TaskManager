@@ -64,6 +64,7 @@ def task_menu(username, users):
     """
     
 
+    
 
     while True:
         print(Fore.CYAN + text2art("Task Menu"))
@@ -78,12 +79,12 @@ def task_menu(username, users):
 
         if choice == "1":
             add_task(username, users)
-        #elif choice == "2":
-        #    remove_task(username, user_data)
+        elif choice == "2":
+            remove_task(username, users)
         elif choice == "3":
             update_task(username, users)
-        #elif choice == "4":
-        #    list_tasks(user_tasks)
+        elif choice == "4":
+            list_tasks(username, users)
         #elif choice == "5":
         #    sort_tasks_menu(user_tasks)
         elif choice == "6":
