@@ -26,11 +26,13 @@ def add_task(username, users):
     """
     # Validate inputs
     name = validate_name()
-    if name is None:
-        return  # Exit if the user chose to quit
+    if  name is None:
+        print(f"{Fore.LIGHTYELLOW_EX}Back to TaskMenu!")
+        return
 
     due_date = validate_date()
     if due_date is None:
+        print(f"{Fore.LIGHTYELLOW_EX}Back to TaskMenu!")
         return  # Exit if the user chose to quit
 
     priority = validate_priority()

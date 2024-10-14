@@ -62,15 +62,8 @@ def task_menu(username, users):
     Returns:
         None
     """
-    user_data = users.get(username, {})
-    if not user_data:
-        print(Fore.RED + "User not found.")
-        return
+    
 
-    user_tasks = user_data.get("tasks", {})
-    if not user_tasks:
-        print(Fore.RED + "No tasks found for this user.")
-        return
 
     while True:
         print(Fore.CYAN + text2art("Task Menu"))
@@ -85,14 +78,14 @@ def task_menu(username, users):
 
         if choice == "1":
             add_task(username, users)
-        elif choice == "2":
-            remove_task(username, user_data)
+        #elif choice == "2":
+        #    remove_task(username, user_data)
         elif choice == "3":
             update_task(username, users)
-        elif choice == "4":
-            list_tasks(user_tasks)
-        elif choice == "5":
-            sort_tasks_menu(user_tasks)
+        #elif choice == "4":
+        #    list_tasks(user_tasks)
+        #elif choice == "5":
+        #    sort_tasks_menu(user_tasks)
         elif choice == "6":
             print(Fore.GREEN + "Logging out.")
             break

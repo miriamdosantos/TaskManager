@@ -1,6 +1,7 @@
 # validators.py
 from colorama import Fore
-from datetime import datetime
+from datetime import datetime, timezone
+
 
 CATEGORY_MAPPING = {"P": "personal", "B": "business"}
 STATUS_MAPPING = {"P": "Pending", "IP": "In Progress", "C": "Complete"}
@@ -18,12 +19,13 @@ def validate_name():
             name = input(
                 Fore.CYAN + 'Enter the task name (or type "quit" to exit): '
             )
-            if name.lower() in ["quit", "exit"]:
-                return None
             if not name.strip():
                 raise ValueError(
                     "Invalid name. Please provide a name, can't be empty."
                 )
+            if name.lower() in "quit":
+                return None
+            
             if len(name) < 5:
                 raise ValueError("Task name has to have at least 5 characters.")
             return name
@@ -31,12 +33,15 @@ def validate_name():
             print(Fore.RED + f"Error: {e}")
 
 
+
+
+
 def validate_date():
     """
     Validate task due date input.
 
     Returns:
-        str: Valid due date in DD-MM-YYYY format.
+        str: Valid due date in DD-MM-YYYY format, or None if the user quits.
     """
     while True:
         try:
@@ -44,16 +49,30 @@ def validate_date():
                 Fore.CYAN
                 + "Enter the due date (DD-MM-YYYY) (or type 'quit' to exit): "
             )
-            if due_date_str.lower() in ["quit", "exit"]:
+            if not due_date_str.strip():
+                raise ValueError(
+                    "Invalid date. Please provide a date, it can't be empty."
+                )
+            if due_date_str.lower() == "quit":
                 return None
-            due_date = datetime.strptime(due_date_str, "%d-%m-%Y")
+
+            # Parse the input date and compare with today's date
+            due_date = datetime.strptime(due_date_str, "%d-%m-%Y").date()
+            today = datetime.now().date()
+
+            # Check if the due date is in the past
+            if due_date < today:
+                print(Fore.RED + f"Invalid date: {due_date_str} has already passed.")
+                continue  # Prompt the user again for a valid date
+
+            # Return the date in the requested format if it's valid
             return due_date.strftime("%d-%m-%Y")
+
         except ValueError as e:
             print(
                 Fore.RED
                 + f"Error: {e}. Please enter the date in the format DD-MM-YYYY."
             )
-
 
 def validate_priority():
     """
@@ -68,7 +87,11 @@ def validate_priority():
                 Fore.CYAN
                 + 'Enter the priority (low, medium, high) (or type "quit" to exit): '
             ).lower()
-            if priority.lower() in ["quit", "exit"]:
+            if not priority.strip():
+                raise ValueError(
+                    "Invalid priority. Please provide a priority, it can't be empty."
+                )
+            if priority.lower() in "quit":
                 return None
             if priority not in ["low", "medium", "high"]:
                 raise ValueError(
@@ -92,12 +115,20 @@ def validate_category():
                 Fore.CYAN
                 + 'Enter the category: P - (Personal), B - (Business) (or type "quit" to exit): '
             ).upper()
-            if category.lower() in ["quit", "exit"]:
+            if not category.strip():
+                raise ValueError(
+                    "Invalid category. Please provide a category, it can't be empty."
+                )
+            if category.lower() in "quit":
                 return None
-            if len(category) != 1 or category not in ["P", "B"]:
+            if category not in ["P", "B"]:
                 raise ValueError(
                     'Category should be either "P" for Personal or "B" for Business.'
                 )
+            if category == 'P':
+                return 'Personal'
+            elif category == 'B':
+                return 'Business'
             return category
         except ValueError as e:
             print(Fore.RED + f"Error: {e}")
@@ -108,22 +139,23 @@ def validate_description():
     Validate task description input.
 
     Returns:
-        str: Valid description (up to 50 characters).
+        str: Valid description (up to 300 characters).
     """
     while True:
         try:
             description = input(
                 Fore.CYAN
-                + 'Enter the description: (maximum 50 characters, press Enter to skip) (or type "quit" to exit): '
+                + 'Enter the description: (maximum 300 characters, press Enter to "skip" or type "quit" to exit): '
             )
-            if description.lower() in ["quit", "exit"]:
-                return None
-            if len(description) > 50:
-                raise ValueError(
-                    "Exceeded the input. Maximum characters allowed: 50"
-                )
             if not description.strip():
                 return ""
+            if description.lower() in ["quit", "exit"]:
+                return None
+            if len(description) > 300:
+                raise ValueError(
+                    f"{Fore.RED}Exceeded the input. Maximum characters allowed: 50"
+                )
+            
             return description
         except ValueError as e:
             print(Fore.RED + f"Error: {e}")
@@ -142,16 +174,24 @@ def validate_status():
                 Fore.CYAN
                 + 'Enter the task status : C - (Complete); P - (Pending); IP - (In Progress) (or type "quit" to exit): '
             ).upper()
-            if status.lower() in ["quit", "exit"]:
+            if not status.strip():
+                raise ValueError(
+                    f"{Fore.RED}Invalid status. Please provide a status, it can't be empty."
+                )
+            if status.lower() in "quit":
                 return None
             if status not in ["C", "P", "IP"]:
                 raise ValueError(
                     "Status should be C - (Complete); P - (Pending); IP - (In Progress)"
                 )
-            return status
+            if status ==  'P':
+                return "Pending"
+            elif status == 'C':
+                return "Complete"
+            elif status == 'IP':
+                return 'In Progress'
         except ValueError as e:
             print(Fore.RED + f"Error: {e}")
-from colorama import Fore  # Ensure you have colorama imported for colored output
 
 def validate_username():
     while True:
