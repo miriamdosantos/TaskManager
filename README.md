@@ -71,14 +71,18 @@ The planning of this project was based on the flow charts using the platform Luc
 ### Welcome page
 ![Welcome page Screenshot](./documents/welcome.png)
 ### 1. User Registration
-Allows new users to create an account easily.
-![User Registration Screenshot](screenshots/user_registration.png)
+Allows new users to create an account easily within passoword confirmation
+![User Registration Screenshot](./documents/register.png)
 
 ### 2. User Login
 Existing users can login with their username and password.
-![User Login Screenshot](screenshots/user_login.png)
+![User Login Screenshot](./documents/login.png)
 
-### 3. Add Task
+### 3. Menu Task
+Users after register / login successfully has acess to Task Menu
+![Menu Tasks Screenshot](./documents//menu-tasks.png)
+
+### 4. Add Task
 Users can add new tasks with details such as name, due date, priority, and category.
 ![Add Task Screenshot](screenshots/add_task.png)
 

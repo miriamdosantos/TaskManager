@@ -1,12 +1,17 @@
 from colorama import Fore, init
 import bcrypt
 import pwinput
-from google_sheets import  save_data_to_sheet
-from validators import validate_username, validate_login_password, validate_password
+from google_sheets import save_data_to_sheet
+from validators import (
+    validate_username,
+    validate_login_password,
+    validate_password,
+)
 
 
 # Initialize colorama for text formatting
 init(autoreset=True)
+
 
 def register_user(users_data):
     """
@@ -27,23 +32,25 @@ def register_user(users_data):
 
     # Validate and hash the user's password
     password = validate_password()
-    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    hashed_password = bcrypt.hashpw(
+        password.encode("utf-8"), bcrypt.gensalt()
+    ).decode("utf-8")
     confirm_password = pwinput.pwinput("Confirm your password: ")
     if confirm_password == password:
         # Store user data with tasks categorized as 'personal' and 'business'
         users_data[username] = {
             "password": hashed_password,
-            "tasks": {
-                "personal": [],
-                "business": []
-            }
+            "tasks": {"personal": [], "business": []},
         }
 
         print(f"{Fore.GREEN}User registered successfully.")
         save_data_to_sheet(users_data)
         return username
     else:
-        print(f"{Fore.RED} Passwords not match. Returning to Main Menu")
+        print(
+            f"{Fore.RED} Passwords not match. Returning to Main Menu"
+        )
+
 
 def login(users_data):
     """
@@ -59,17 +66,28 @@ def login(users_data):
     input_password = validate_login_password()
 
     # Retrieve the stored password for the provided username
-    stored_password = users_data.get(username, {}).get('password', None)
+    stored_password = users_data.get(username, {}).get(
+        "password", None
+    )
 
     # Check if the username exists
     if not stored_password:
-        print(f"{Fore.RED}Username not found. Returning to main menu.")
+        print(
+            f"{Fore.RED}Username not found. Returning to main menu."
+        )
         return None  # Return None if username doesn't exist
 
     # Verify the input password matches the stored hashed password
-    if bcrypt.checkpw(input_password.encode('utf-8'), stored_password.encode('utf-8')):
-        print(f"{Fore.GREEN}Login successful! Welcome back {username}")
+    if bcrypt.checkpw(
+        input_password.encode("utf-8"),
+        stored_password.encode("utf-8"),
+    ):
+        print(
+            f"{Fore.GREEN}Login successful! Welcome back {username}"
+        )
         return username  # Return username if login was successful
     else:
-        print(f"{Fore.RED}Incorrect password. Try again. Returning to main menu.")
+        print(
+            f"{Fore.RED}Incorrect password. Try again. Returning to main menu."
+        )
         return None  # Return None if the password is incorrect
