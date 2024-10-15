@@ -1,7 +1,9 @@
-from google_sheets import  save_data_to_sheet
 from colorama import Fore, init
-from validators import validate_username, validate_login_password, validate_password
 import bcrypt
+import pwinput
+from google_sheets import  save_data_to_sheet
+from validators import validate_username, validate_login_password, validate_password
+
 
 # Initialize colorama for text formatting
 init(autoreset=True)
@@ -26,19 +28,22 @@ def register_user(users_data):
     # Validate and hash the user's password
     password = validate_password()
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-    # Store user data with tasks categorized as 'personal' and 'business'
-    users_data[username] = {
-        "password": hashed_password,
-        "tasks": {
-            "personal": [],
-            "business": []
+    confirm_password = pwinput.pwinput("Confirm your password: ")
+    if confirm_password == password:
+        # Store user data with tasks categorized as 'personal' and 'business'
+        users_data[username] = {
+            "password": hashed_password,
+            "tasks": {
+                "personal": [],
+                "business": []
+            }
         }
-    }
 
-    print(f"{Fore.GREEN}User registered successfully.")
-    save_data_to_sheet(users_data)
-    return username
+        print(f"{Fore.GREEN}User registered successfully.")
+        save_data_to_sheet(users_data)
+        return username
+    else:
+        print(f"{Fore.RED} Passwords not match. Returning to Main Menu")
 
 def login(users_data):
     """

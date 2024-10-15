@@ -1,6 +1,8 @@
 # validators.py
 from colorama import Fore
+import pwinput
 from datetime import datetime, timezone
+
 
 
 def validate_name(prompt_message="Enter the task name (or type 'quit' to exit): "):
@@ -214,7 +216,8 @@ def validate_username():
 def validate_password():
     while True:
         try:
-            password = input("Enter your password: ").strip()
+            # Use pwinput with mask='*' to show asterisks
+            password = pwinput.pwinput(prompt="Enter your password: ", mask='*').strip()
             if len(password) < 5:
                 raise ValueError("For better security, the password must have at least 5 characters.")
             return password
@@ -224,7 +227,8 @@ def validate_password():
 def validate_login_password():
     while True:
         try:
-            password = input("Enter your password: ").strip()
+            # Use pwinput with mask='*' to show asterisks
+            password = pwinput.pwinput(prompt="Enter your password: ", mask='*').strip()
             if not password:
                 raise ValueError("Password cannot be empty.")
             return password

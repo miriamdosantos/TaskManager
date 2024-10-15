@@ -8,8 +8,6 @@ from art import text2art
 # Initialize colorama for colored console output
 init(autoreset=True)
 
-
-
 def main():
     """
     Main function to run the Task Manager application.

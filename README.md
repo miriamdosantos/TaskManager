@@ -28,15 +28,84 @@
 - [Screenshots](#screenshots)
 - [Credits](#credits)
 
-## Description
-The Task Manager Application is designed to help users manage their tasks efficiently. Users can register, login, add tasks, and categorize them as personal or business. Tasks can be sorted by name, due date, priority, and status.
+## Purpose of the Project
+This project is a Task Manager application designed to help users organize, manage, and track their tasks efficiently. It allows users to register, login, and interact with their personal and business tasks through an intuitive menu interface, with options to add, edit, view, sort, and remove tasks. The project integrates with Google Sheets to store user information and task details, ensuring data persistence and accessibility.
+## User Stories
+- 1. **User Registration**: As a new user, I want to register an account so that I can start managing my tasks.
+- 2. **User Login**: As a returning user, I want to log into my account so that I can access my previously saved tasks.
+- 3. **Add Task**: As a user, I want to add new tasks to my task list so that I can keep track of my activities.
+- 4. **View Tasks**: As a user, I want to view all my tasks in one place so that I can easily manage my schedule.
+- 5. **Edit Task**: As a user, I want to edit the details of a task so that I can update information like due date or priority.
+- 6. **Remove Task**: As a user, I want to remove tasks that are no longer needed so that my task list stays organized.
+- 7. **Sort Tasks**: As a user, I want to sort my tasks by: name, priority , due date or status, that I can focus on the most important ones.
+- 8. **Task Categories**: As a user, I want to categorize my tasks as 'personal' or 'business' so that I can better organize my tasks.
+
+## Colors
+Colored text will be shown across the game to make users more interested and attracted. Wrong inputs across the game will be shown in red color, and green color to successuful actions. Colors in the game are imported from Python Colorama Model
+
+## Technology Used
+- **Languages**:
+  - Phython
+
+- **Libraries**
+  - [Git](https://git-scm.com/)
+    - Git was used for version control by utilizing the Visual Studio terminal to commit to Git and push to GitHub
+  - [Github](https://github.com/)
+    - GitHub is used to store the project's code after being pushed from Git
+  - [Heroku](https://dashboard.heroku.com/)
+    - Heroku was used to deploy the live project
+  - [Draw.io](https://app.diagrams.net/)
+    - Draw.io was used to creating the flowchart
+  - [PEP8](https://pep8ci.herokuapp.com/#)
+  - [Art] 
+    - Utilized the art library to generate ASCII art for displaying titles and menus in the console, adding a visually appealing element to the application's user interface. For example, the text2art function is used to create stylized text for the "Task Manager" and "Task Menu" titles.
+
+## Flow Chart
+The planning of this project was based on the flow charts using the platform Lucid Char
+<details><summary>View Screenshot</summary>![flow screenshot](./documents/task-manager-flow.jpg)
+
+
 
 ## Features
-- User registration and login
-- Add, remove, and edit tasks
-- Categorize tasks as personal or business
-- Sort tasks by various criteria
-- Error handling with colored messages
+
+### Welcome page
+![Welcome page Screenshot](./documents/welcome.png)
+### 1. User Registration
+Allows new users to create an account easily.
+![User Registration Screenshot](screenshots/user_registration.png)
+
+### 2. User Login
+Existing users can login with their username and password.
+![User Login Screenshot](screenshots/user_login.png)
+
+### 3. Add Task
+Users can add new tasks with details such as name, due date, priority, and category.
+![Add Task Screenshot](screenshots/add_task.png)
+
+### 4. View All Tasks
+View all tasks in an organized list.
+![View All Tasks Screenshot](screenshots/view_tasks.png)
+
+### 5. Sort Tasks
+Sort tasks based on different criteria like priority or due date for better viewing.
+![Sort Tasks Screenshot](screenshots/sort_tasks.png)
+
+### 6. Edit Task
+Update the details of an existing task.
+![Edit Task Screenshot](screenshots/edit_task.png)
+
+### 7. Remove Task
+Delete a task from the list, and it will be removed from Google Sheets.
+![Remove Task Screenshot](screenshots/remove_task.png)
+
+### 8. Logout
+Logs the user out and returns to the login menu.
+![Logout Screenshot](screenshots/logout.png)
+
+
+
+
+
 
 ## Installation
 To install the necessary dependencies, run the following commands:
