@@ -1,4 +1,4 @@
-from google_sheets import load_data_from_sheet, save_data_to_sheet, setup_google_sheets
+from google_sheets import  save_data_to_sheet
 from colorama import Fore, init
 from validators import validate_username, validate_login_password, validate_password
 import bcrypt
@@ -63,7 +63,7 @@ def login(users_data):
 
     # Verify the input password matches the stored hashed password
     if bcrypt.checkpw(input_password.encode('utf-8'), stored_password.encode('utf-8')):
-        print(f"{Fore.GREEN}Login successful!")
+        print(f"{Fore.GREEN}Login successful! Welcome back {username}")
         return username  # Return username if login was successful
     else:
         print(f"{Fore.RED}Incorrect password. Try again. Returning to main menu.")

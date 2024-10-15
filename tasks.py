@@ -4,13 +4,10 @@
 from datetime import datetime
 from colorama import Fore,init
 import  shortuuid
-from google_sheets import save_data_to_sheet
+from google_sheets import save_data_to_sheet, load_data_from_sheet,setup_google_sheets
 
 from validators import *
 
-
-CATEGORY_MAPPING = {"P": "personal", "B": "business"}
-STATUS_MAPPING = {"P": "Pending", "IP": "In Progress", "C": "Complete"}
 
 init(autoreset=True)
 
@@ -53,9 +50,9 @@ def add_task(username, users):
     if status is None:
         return
 
-    # Create the task dictionary with a unique ID
+    # Generate a unique task ID using shortuuid and construct the task dictionary
     task = {
-        "id": shortuuid.uuid()[:2].lower(),  # Generate a unique ID
+        "id": shortuuid.uuid()[:2].lower(),  
         "name": name,
         "due_date": due_date,
         "priority": priority,
@@ -64,12 +61,12 @@ def add_task(username, users):
         "status": status,
     }
 
-    # Add the task to the user's task list
+    # Add the task to the user's list, ensuring it is added to the correct category
     users[username]["tasks"].setdefault(category, []).append(task)
 
     # Save the updated users data to Google Sheets
     save_data_to_sheet(users)
-
+    
     print(Fore.GREEN + "Task added successfully!")
 
 def list_tasks(username, users):
@@ -81,12 +78,14 @@ def list_tasks(username, users):
         users (dict): A dictionary containing user data.
 
     Returns:
-        None
+        int: The number of tasks found.
     """
+    # Load user data and retrieve tasks
+    users = load_data_from_sheet()
     user_data = users.get(username, {})
     user_tasks = user_data.get("tasks", {})
 
-    # Use um filtro para encontrar tarefas pessoais e de negócios
+    # Filter tasks into personal and business categories
     personal_tasks = [
         task for task in user_tasks.get("personal", [])
         if task["category"] in ["p", "personal"]
@@ -96,28 +95,27 @@ def list_tasks(username, users):
         if task["category"] in ["b", "business"]
     ]
 
-    if not personal_tasks and not business_tasks:
-        print(Fore.RED + "No tasks found for this user.")
-        return
+    total_tasks = len(personal_tasks) + len(business_tasks)
 
-    # Display personal tasks
+    if total_tasks == 0:
+        print(f"{Fore.RED} +  {username}, No tasks found at the moment")
+        return total_tasks  # Return count
+
+    # Display personal tasks if they exist
     if personal_tasks:
         print(Fore.MAGENTA + "-" * 50)
-        print(f"{Fore.WHITE}{' ' * 15} Personal Tasks:")
+        print(f"{Fore.WHITE}{' ' * 15}Personal Tasks:")
         for task in personal_tasks:
             print_task_details(task)
-    else:
-        print("No Personal Tasks")
 
-    # Display business tasks
+    # Display business tasks if they exist
     if business_tasks:
         print(Fore.MAGENTA + "-" * 50)
-        print(f"{' ' * 15} Business Tasks:")
+        print(f"{Fore.WHITE}{' ' * 15}Business Tasks:")
         for task in business_tasks:
             print_task_details(task)
-    else:
-        print("No Business Tasks")
 
+    return total_tasks  # Return the total count of tasks found
 
 def print_task_details(task):
     """
@@ -138,9 +136,11 @@ def print_task_details(task):
     print(f"{Fore.GREEN}Status: {task['status']}")
     print(Fore.MAGENTA + "-" * 50)
 
+
+
 def remove_task(username, users):
     """
-    Remove a task for the user.
+    Remove a task for the user and update Google Sheets.
 
     Parameters:
         username (str): Username of the user.
@@ -151,25 +151,46 @@ def remove_task(username, users):
     """
     user_tasks = users.get(username, {}).get("tasks", {})
 
-    if not user_tasks:
-        print(f"{Fore.RED}No tasks found for this user.")
-        return
+    # List tasks before removal
+    list_tasks(username, users)
+    # Check if there are no tasks after listing
+    if not (user_tasks.get("personal") or user_tasks.get("business")):
+        return  # Return to the menu if no tasks exist
 
-    list_tasks(username, users)  # List tasks before removal
-
+      
+ 
     while True:
         task_id = input('Enter the Task ID to remove (or type "quit" to exit): ').strip().lower()
         if task_id.lower() in ["quit", "exit"]:
             return
 
         task_found = False
-        for _, tasks in user_tasks.items():  # Ignoring the category variable
+        # Iterate over all categories to find the task with the given ID
+        for category, tasks in user_tasks.items():
             for i in range(len(tasks)):
                 if tasks[i].get('id') == task_id:  # Use get() to avoid KeyError
                     task_found = True
-                    removed_task = tasks.pop(i)  # Remove the task
-                    print(f"{Fore.GREEN}Task '{removed_task['name']}' removed successfully.")
-                    save_data_to_sheet(users)  # Save changes
+                    removed_task = tasks.pop(i)  # Remove the task from local data structure
+
+                    # Now delete from Google Sheets
+                    task_sheet = setup_google_sheets("Task-Manager", 1)  # Load the task worksheet
+
+                    if task_sheet is None:
+                        print("Error: Unable to access Google Sheets.")
+                        return
+
+                    # Get all records from the tasks sheet
+                    all_tasks = task_sheet.get_all_records()
+
+                    # Find and delete the row that matches username and task_id
+                    for index, record in enumerate(all_tasks):
+                        if record['Username'] == username and record['Task ID'] == task_id:
+                            # Delete the row (gspread uses 1-based indexing)
+                            task_sheet.delete_rows(index + 2)  # +2 because get_all_records() is zero-indexed and headers are present
+                            print(f"{Fore.GREEN}Task '{removed_task['name']}' deleted successfully.")
+                            return
+
+                    print(f"{Fore.RED}Task with ID '{task_id}' not found in Google Sheets.")
                     break  # Break out of the inner loop
             if task_found:
                 break  # Break out of the outer loop
@@ -189,12 +210,13 @@ def update_task(username, users):
         None
     """
     user_tasks = users.get(username, {}).get("tasks", {})
-    if not user_tasks:
-        print(f"{Fore.RED}No tasks found for this user.")
-        return
-
-    while True:
-        list_tasks(username, users)  # Assuming the function list_tasks exists
+    
+    # Check if there are no tasks after listing
+    list_tasks(username, users) 
+    if not (user_tasks.get("personal") or user_tasks.get("business")):
+        return  # Return to the menu if no tasks exist
+    
+    while True: 
         try:
             task_id = input(f"Enter the Task ID to update, or type 'quit' to exit: ").strip()
             if task_id.lower() == "quit":
@@ -244,7 +266,7 @@ def update_field_menu(task, users):
         
         
         field_choice = input("Enter your choice: ")
-
+        # Validate and update fields based on user input
         if field_choice == "1":
             new_name = validate_name("Enter the new name for the task (or type 'quit' to exit): ")
             if new_name is not None:
@@ -288,9 +310,7 @@ def update_field_menu(task, users):
                 print(f"{Fore.GREEN}Task status updated successfully.")
 
         elif field_choice == "7":
-            break  # Back to the main menu
-        elif field_choice == "8":
-            return None
+            break  
         else:
             print(f"{Fore.RED}Invalid choice. Please enter a number between 1 and 7.")
 
@@ -304,17 +324,14 @@ def sort_tasks_menu(user_tasks):
     Returns:
         None
     """
-    all_tasks = user_tasks.get("personal", []) + user_tasks.get("business", [])
-    if not all_tasks:
-        print(f"{Fore.RED}No tasks available to sort.")
-        return
 
-    list_tasks(user_tasks)  # Presumindo que a função list_tasks existe
+    # Combine all tasks into a single list
+    all_tasks = user_tasks.get("personal", []) + user_tasks.get("business", [])
 
     while True:
         sort_criteria = (
             input(
-                "Enter the sorting criteria (name, due_date, priority, status) or type 'quit' to exit: "
+                "Enter the sorting criteria (name, due_date, priority, status) or type 'quit' to exit to the main menu: "
             )
             .strip()
             .lower()
@@ -327,22 +344,22 @@ def sort_tasks_menu(user_tasks):
             )
             continue
 
+        # Sort tasks based on criteria
         if sort_criteria == "due_date":
+            print(f"{Fore.YELLOW}Sorted tasks by due_date (oldest to newest):")
             sorted_tasks = sort_by_due_date(all_tasks)
         elif sort_criteria == "priority":
-            print("Sorted tasks priority: High / Medium / Low")
+            print(f"{Fore.YELLOW}Sorted tasks priority: High / Medium / Low :")
             sorted_tasks = sort_by_priority(all_tasks)
         elif sort_criteria == "status":
-            print("Sorted tasks Status: In Progress / Pending / Complete")
+            print(f"{Fore.YELLOW}Sorted tasks Status: In Progress / Pending / Complete :")
             sorted_tasks = sort_by_status(all_tasks)
-        else:
-            sorted_tasks = sorted(
-                all_tasks, key=lambda x: x.get(sort_criteria, "")
-            )
+        elif sort_criteria == "name":  
+            print(f"{Fore.YELLOW}Sorted tasks by Name :")
+            sorted_tasks = sorted(all_tasks, key=lambda x: x.get("name", "").lower())
 
         print_sorted_tasks(sorted_tasks)
         break
-
 
 def print_sorted_tasks(sorted_tasks):
     """
@@ -355,13 +372,10 @@ def print_sorted_tasks(sorted_tasks):
         None
     """
     if sorted_tasks:
-        print("Sorted Tasks:")
         for i, task in enumerate(sorted_tasks, start=1):
-            task_id = f"{task['category']}{i}"
-            print_task_details(task, task_id)
+            print_task_details(task)
     else:
         print("No tasks to display.")
-
 
 def sort_by_priority(tasks):
     """
@@ -374,10 +388,7 @@ def sort_by_priority(tasks):
         list: Sorted list of tasks by priority.
     """
     priority_order = {"low": 3, "medium": 2, "high": 1}
-    return sorted(
-        tasks, key=lambda x: priority_order.get(x["priority"], float("inf"))
-    )
-
+    return sorted(tasks, key=lambda x: priority_order.get(x["priority"], float("inf")))
 
 def sort_by_due_date(tasks, reverse=False):
     """
@@ -389,12 +400,7 @@ def sort_by_due_date(tasks, reverse=False):
     Returns:
         list: Sorted list of tasks by due date.
     """
-    return sorted(
-        tasks,
-        key=lambda x: datetime.strptime(x["due_date"], "%d-%m-%Y"),
-        reverse=reverse,
-    )
-
+    return sorted(tasks, key=lambda x: datetime.strptime(x["due_date"], "%d-%m-%Y"), reverse=reverse)
 
 def sort_by_status(tasks):
     """
@@ -407,29 +413,5 @@ def sort_by_status(tasks):
         list: Sorted list of tasks by status.
     """
     status_order = {"Pending": 1, "In Progress": 2, "Complete": 3}
-    return sorted(
-        tasks, key=lambda x: status_order.get(x["status"], float("inf"))
-    )
-
-
-
-
-
-def check_empty_list(tasks, message):
-    """
-    Checks if the tasks it really exist
-    and in case not, can't have a speficic message; related to that task
-    Parameters:
-    tasks(list with the dict within the dict represent the task)
-    message: Personalized message in case not find the tasks
-
-    Return:
-    True or False
-    """
-    if not tasks:
-        print(message)
-        return True
-    return False
-
-
+    return sorted(tasks, key=lambda x: status_order.get(x["status"], float("inf")))
 

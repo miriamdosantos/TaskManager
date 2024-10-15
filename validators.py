@@ -3,10 +3,6 @@ from colorama import Fore
 from datetime import datetime, timezone
 
 
-CATEGORY_MAPPING = {"P": "personal", "B": "business"}
-STATUS_MAPPING = {"P": "Pending", "IP": "In Progress", "C": "Complete"}
-
-
 def validate_name(prompt_message="Enter the task name (or type 'quit' to exit): "):
     """
     Validate task name input with a custom prompt message.
@@ -26,6 +22,8 @@ def validate_name(prompt_message="Enter the task name (or type 'quit' to exit): 
                 return None
             if len(name) < 5:
                 raise ValueError("Task name has to have at least 5 characters.")
+            if name.isnumeric():
+                raise ValueError("Task name cannot be only numeric.")
             return name
         except ValueError as e:
             print(Fore.RED + f"Error: {e}")
@@ -65,10 +63,10 @@ def validate_date(prompt_message ="Enter the due date (DD-MM-YYYY) (or type 'qui
             # Return the date in the requested format if it's valid
             return due_date.strftime("%d-%m-%Y")
 
-        except ValueError as e:
+        except ValueError :
             print(
                 Fore.RED
-                + f"Error: {e}. Please enter the date in the format DD-MM-YYYY."
+                + f" Please enter the date in the format DD-MM-YYYY."
             )
 
 def validate_priority(prompt_message = 'Enter the priority (low, medium, high) (or type "quit" to exit): ' ):

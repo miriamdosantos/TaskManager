@@ -8,9 +8,7 @@ from art import text2art
 # Initialize colorama for colored console output
 init(autoreset=True)
 
-# Define mappings for task categories and statuses
-CATEGORY_MAPPING = {"P": "personal", "B": "business"}
-STATUS_MAPPING = {"C": "Complete", "P": "Pending", "IP": "In Progress"}
+
 
 def main():
     """
@@ -62,42 +60,43 @@ def task_menu(username, users):
     Returns:
         None
     """
+    user_data = users.get(username, {})
     
-
-    
-
     while True:
+        # Display Task Menu options
         print(Fore.CYAN + text2art("Task Menu"))
         print(Fore.YELLOW + "1. Add Task")
         print(Fore.YELLOW + "2. View All Tasks ")
         print(Fore.YELLOW + "3. Edit Task")
         print(Fore.YELLOW + "4. Remove Task")
-        print(Fore.YELLOW + "5. Sort Tasks")
-        print(Fore.YELLOW + "6. Logout")
+        print(Fore.YELLOW + "5. Logout")
 
         choice = input(Fore.CYAN + "Enter your choice: ")
-
+        
+        # Handle user choices
         if choice == "1":
             add_task(username, users)
         elif choice == "2":
-            list_tasks(username, users)
-            
+            task_count = list_tasks(username, users)  # Get the count of tasks
+            if task_count < 2:
+                print(f"{Fore.GREEN} No option to sort at the moment as only {task_count} Task saved.")
+            else:
+                sort_option = input("If you would like to sort the tasks for better view, press 1 to continue or any other key to return to the main menu: ")
+                if sort_option.strip() == "1":
+                    sort_tasks_menu(user_data.get("tasks", {}))  # Pass the user's tasks for sorting
+           
         elif choice == "3":
             update_task(username, users)
         elif choice == "4":
             remove_task(username, users)
-            
-        #elif choice == "5":
-        #    sort_tasks_menu(user_tasks)
-        elif choice == "6":
+        elif choice == "5":
             print(Fore.GREEN + "Logging out.")
             break
         else:
             print(
                 Fore.RED
-                + "Invalid choice. Please enter a number between 1 and 6."
+                + "Invalid choice. Please enter a number between 1 and 5."
             )
-
 
 if __name__ == "__main__":
     users = load_data_from_sheet()

@@ -76,25 +76,20 @@ def load_data_from_sheet():
     for record in task_data:
         if 'Username' in record:
             username = record['Username']
+            task = {
+                "id": record['Task ID'],  # Carrega o ID da tarefa
+                "name": record['Task Name'],
+                "due_date": record['Due Date'],
+                "priority": record['Priority'],
+                "category": record['Category'].lower(),
+                "description": record['Description'],
+                "status": record['Status']
+            }
 
-            # Check if 'Task ID' exists in the record
-            if 'Task ID' in record:
-                task = {
-                    "id": record['Task ID'],  # Load the task ID
-                    "name": record['Task Name'],
-                    "due_date": record['Due Date'],
-                    "priority": record['Priority'],
-                    "category": record['Category'].lower(),
-                    "description": record['Description'],
-                    "status": record['Status']
-                }
+            category = "personal" if task["category"] in ["p", "personal"] else "business" if task["category"] in ["b", "business"] else None
 
-                category = "personal" if task["category"] in ["p", "personal"] else "business" if task["category"] in ["b", "business"] else None
-
-                if category and username in users_data:
-                    users_data[username]["tasks"][category].append(task)
-            else:
-                print(f"Warning: 'Task ID' not found for record: {record}")
+            if category and username in users_data:
+                users_data[username]["tasks"][category].append(task)
 
     return users_data
 
@@ -126,22 +121,38 @@ def save_data_to_sheet(users_data):
             existing_users.add(username)
 
     # Update the task worksheet
-    existing_tasks = set((record['Username'], record['Task ID'], record['Task Name'], record['Due Date']) 
-                         for record in task_sheet.get_all_records())
+    all_tasks = task_sheet.get_all_records()
+    
+    # Create a mapping of (Username, Task ID) to row index for easy access
+    task_row_map = {(record['Username'], record['Task ID']): index + 2 for index, record in enumerate(all_tasks)}  # +2 for 1-based index and header
 
     # Add header to the task sheet if it is empty
-    if not existing_tasks:
+    if not all_tasks:
         task_sheet.append_row(["Username", "Task ID", "Task Name", "Due Date", "Priority", "Category", "Description", "Status"])
 
     for username, user_info in users_data.items():
         for category, tasks in user_info["tasks"].items():
             for task in tasks:
-                task_id = (username, task["id"], task["name"], task["due_date"])
+                task_id = (username, task["id"])
                 
-                if task_id not in existing_tasks:
+                if task_id in task_row_map:
+                    # Update existing row
+                    row_index = task_row_map[task_id]
+                    task_sheet.update(f'A{row_index}:H{row_index}', [[
+                        username,
+                        task["id"],
+                        task["name"],
+                        task["due_date"],
+                        task["priority"],
+                        category,
+                        task["description"],
+                        task["status"]
+                    ]])
+                else:
+                    # Append new tasks only if they don't already exist
                     task_sheet.append_row([
                         username,
-                        task["id"],  # Inclui o ID da tarefa
+                        task["id"],  # Include Task ID
                         task["name"],
                         task["due_date"],
                         task["priority"],
@@ -149,4 +160,3 @@ def save_data_to_sheet(users_data):
                         task["description"],
                         task["status"]
                     ])
-                    existing_tasks.add(task_id)
