@@ -1,35 +1,50 @@
 # Task Manager Application
 
 ## Table of Contents
-- [Description](#description)
+- [Purpose of the Project](#purpose-of-the-project)
+- [User Stories](#user-stories)
+- [Colors](#colors)
+- [Technology Used](#technology-used)
+    - [Languages](#languages)
+    - [Version Control & Deployment](#version-control-&-deployment)
+    - [Diagram Tools](#diagram-tools)
+    - [Libraries](#libraries)
+- [ Flow Chart](#flow-chart)
 - [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Testing](#testing)
-- [PEP8 Validator](#pep8-validator)
+    - [Welcome page](#welcome-page)
+    - [User Registration](#user-registration)
+    - [User Login](#user-login)
+    - [Menu Task](#menu-task)
+    - [Add Task](#add-task)
+    - [View All Tasks](#view-all-tasks)
+    - [Sort Tasks](#sort-tasks)
+    - [Edit Task](#edit-task)
+    - [Remove Task](#remove-task)
+    - [Logout](#logout)
+    - [Google Sheets Structure and Database-Like Relationshi](#google-sheets-structure-and-database-like-relationship)
 - [Testing User Stories](#testing-user-stories)
-  - [Client Goals](#client-goals)
-  - [First Time Visitor Goals](#first-time-visitor-goals)
-  - [Returning Visitor Goals](#returning-visitor-goals)
-- [Manual Testing](#manual-testing)
-  - [Full Testing](#full-testing)
-  - [Landing Page](#landing-page)
-  - [New User](#new-user)
-  - [Existing User](#existing-user)
-  - [Main Menu](#main-menu)
-  - [Enter Task](#enter-task)
-  - [Next Choice](#next-choice)
-  - [Analyse Tasks](#analyse-tasks)
-  - [View Tasks](#view-tasks)
-- [Future Testing](#future-testing)
-- [Bugs](#bugs)
-  - [Resolved Bugs](#resolved-bugs)
-  - [Unresolved Bugs](#unresolved-bugs)
-- [Screenshots](#screenshots)
+    - [Client Goals](#client-goals)
+    - [First Time Visitor Goals](#first-time-visitor-goals)
+    - [Returning Visitor Goals](#returning-visitor-goals)
+    - [Full Testing](#full-testing)
+        - [Landing Page](#landing-page)
+        - [Validate Inputs](#validate-inputs)
+        - [New User](#new-user)
+        - [Existing User](#existing-user)
+        - [Main Menu](#main-menu)
+        - [Enter Task](#enter-task)
+        - [Analyse Tasks](#analyse-tasks)
+        - [View Tasks](#view-tasks)
+    - [Code Validation](#code-validation)
+- [Future Features](#future-features)
+- [Bugs Encountered](#bugs-encountered)
+- [Deployment](#deployment)
 - [Credits](#credits)
 
 ## Purpose of the Project
 This project is a Task Manager application designed to help users organize, manage, and track their tasks efficiently. It allows users to register, login, and interact with their personal and business tasks through an intuitive menu interface, with options to add, edit, view, sort, and remove tasks. The project integrates with Google Sheets to store user information and task details, ensuring data persistence and accessibility.
+[Visit the Live site here](https://task-management1-d329f1a22e0d.herokuapp.com/).
+
 ## User Stories
 - 1. **User Registration**: As a new user, I want to register an account so that I can start managing my tasks.
 - 2. **User Login**: As a returning user, I want to log into my account so that I can access my previously saved tasks.
@@ -82,14 +97,17 @@ Colored text will be shown across the game to make users more interested and att
     - The pwinput library is used to mask password input during the login and registration process, enhancing security by preventing passwords from being visible on the console when entered by the user.
 
 ## Flow Chart
-The planning of this project was based on the flow charts using the platform Lucid Char
-<details><summary>View Screenshot</summary>![flow screenshot](./documents/task-manager-flow.jpg)</details>
+The planning of this project was based on the flow charts using the platform Draw.io
+<details><summary>View Screenshot</summary>
+    <img src="documents/drawio.png" alt="flow screenshot" width="400"/>
+    </details>
 
 
 
 ## Features
 
 ### Welcome page
+
 ![Welcome page Screenshot](./documents/welcome.png)
 ### 1. User Registration
 Allows new users to create an account easily within passoword confirmation
@@ -127,165 +145,214 @@ Delete a task from the list, and it will be removed from Google Sheets.
 Logs the user out and returns to the login menu.
 ![Logout Screenshot](./documents/logout.png)
 
+### Google Sheets Structure and Database-Like Relationship
+- **Overview:**
+  - In this project, Google Sheets is used as a simple yet effective way to store and manage data, similar to how a database functions.
+  - Each sheet acts like a table in a relational database, with rows representing individual records and columns representing fields of each record.
 
-### Testing User Stories
-#### Client Goals
+- **Users Sheet:**
+  - The `users` sheet functions similarly to a "Users" table in a database.
+  - It stores information about each registered user, including their `username` and encrypted `password`.
+  - Each row corresponds to a unique user, and columns like `username` and `password` act as fields that store specific user attributes.
+  - This allows for easy user authentication by matching the provided username and password with the stored records.
+
+- **Tasks Sheet:**
+  - The `tasks` sheet serves as a "Tasks" table, associating tasks with their respective users.
+  - Each row represents a task, including fields for `Task ID`, `username`, `task name`, `due date`, `priority`, `category`, `description`, and `status`.
+  - The `username` field acts as a foreign key, linking each task to a specific user from the `users` sheet.
+  - This relationship allows users to manage their own tasks independently, as tasks are retrieved and filtered based on the `username` when a user is logged in.
+
+- **Database-Like Relationship:**
+  - The connection between `users` and `tasks` in Google Sheets resembles a one-to-many relationship often found in relational databases:
+    - **One User to Many Tasks**: Each user (record in the `users` sheet) can have multiple tasks (records in the `tasks` sheet), identified by their `username`.
+    - The `username` field in the `tasks` sheet ensures that each task is linked to the appropriate user.
+    - This setup allows us to perform operations like adding, updating, or deleting tasks for a specific user while maintaining a clear structure of ownership.
+
+- **Benefits of Using Google Sheets:**
+  - Using Google Sheets offers a simple, user-friendly interface for viewing and managing data.
+  - It is especially useful for smaller applications that don't require a more complex database setup.
+  - Additionally, this approach allows for easy integration with Python scripts through APIs, making it a good choice for projects that benefit from cloud-based data storage without needing a full-fledged database server.
+  ![Google-Sheet Screenshot](documents/google-sheets.png)
+
+## Testing User Stories
+### Client Goals
 - Provide an intuitive interface for managing tasks.
 - Allow users to categorize and prioritize tasks.
 - Ensure data persistence for user tasks.
 
-#### First Time Visitor Goals
+### First Time Visitor Goals
 - Easily register and create an account.
 - Understand how to add, view, and manage tasks.
 
-#### Returning Visitor Goals
+### Returning Visitor Goals
 - Quickly login and access their tasks.
 - Efficiently, view, remove, update and sort tasks.
 
 ### Full Testing
 All features were manually tested to ensure they work as expected. Below are the specific scenarios tested.
-
 #### Landing Page
 - **Test Case 1: Display Options**
   - Verify that the landing page displays options to register and login:
-  <details><summary>View Screenshot</summary>![lading page](./documents/welcome.png)</details>
+  <details><summary>View Screenshot</summary>
+    <img src="documents/welcome.png" alt="landing page" width="400"/>
+    </details>
 
+  #### Validate Inputs
+- **Test Case 1: Validate Invalid Inputs**
   - Validate that invalid inputs are handled gracefully and prompt the user to enter a valid choice:
-  <details><summary>View Screenshot Username Validate Inputs</summary>![username validade inputs screenshoot](./documents/username-test.png)</details>
-  <details><summary>View Screenshot Password Validate Inputs</summary>![password validade inputs screenshoot](./documents/password-test.png)</details>
+    <details><summary>View Screenshot Username Validate Inputs</summary>
+    <img src="./documents/username-test.png" alt="username validate inputs screenshot" width="400"/>
+    </details>
+    <details><summary>View Screenshot Password Validate Inputs</summary>
+    <img src="./documents/password-test.png" alt="password validate inputs screenshot" width="400"/>
+    </details>
+
+
 #### New User
 - **Test Case 1: Successful Registration**
   - Register with a new username and password that meet the length requirements (at least 5 characters).
-  - Register with a new username and password that meet input can't be empty.
-  - Register with a new username contain alphabetic caracteres. 
-  - Register with a passoword thats matchs with confirmation passoword. 
   - Ensure the user is successfully registered and redirected to the task menu.
-  - In all cases an appropriate error message is displayed to inform the user.
+  - In all cases, an appropriate error message is displayed to inform the user.
+
 - **Test Case 2: Username Length Validation**
   - Attempt to register with a username shorter than 5 characters.
   - Verify that an appropriate error message is displayed and the user is prompted to re-enter the username.
+
 - **Test Case 3: Existing Username Conflict**
   - Attempt to register with a username that already exists.
   - Ensure that a message indicating the username already exists is displayed and the user is prompted to choose a different username.
-  <details><summary>View Screenshot Username Existing </summary>![username validade inputs(existing) screenshoot](./documents/username-exists.png)</details>
+    <details><summary>View Screenshot Username Exists</summary>
+    <img src="./documents/username-exists.png" alt="username exists screenshot" width="400"/>
+    </details>
 
 #### Existing User
 - **Test Case 1: Successful Login**
   - Login with valid credentials.
   - Ensure the user is successfully authenticated and redirected to the task menu.
-  <details><summary>View Screenshot Login Successfully</summary>![ Login Successfully screenshoot](./documents/login.png)</details>
+    <details><summary>View Screenshot Login Successfully</summary>
+    <img src="./documents/login.png" alt="login successfully screenshot" width="400"/>
+    </details>
+
 - **Test Case 2: Invalid Username**
   - Attempt to login with a non-existent username.
   - Verify that an appropriate error message is displayed.
-  <details><summary>View Screenshot Login non-existent username </summary>![ Login failed - username screenshoot](./documents/failed-login.png)</details>
+    <details><summary>View Screenshot Invalid Username</summary>
+    <img src="./documents/failed-login.png" alt="invalid username login screenshot" width="400"/>
+    </details>
+
 - **Test Case 3: Incorrect Password**
   - Attempt to login with an incorrect password for an existing username.
   - Verify that an appropriate error message is displayed.
-  <details><summary>View Screenshot incorrect password for an existing username </summary>![ Login failed - password screenshoot](./documents/failed-login-password.png)</details>
+    <details><summary>View Screenshot Incorrect Password</summary>
+    <img src="./documents/failed-login-password.png" alt="incorrect password screenshot" width="400"/>
+    </details>
 
 #### Main Menu
 - **Test Case 1: Display Options**
   - Verify that the main menu displays options to add, remove, edit, view, sort tasks, or logout.
   - Validate that invalid inputs are handled gracefully and prompt the user to enter a valid choice.
-  <details><summary>View Screenshot Menu Task Choice </summary>![ validate menu task choice screenshoot](./documents/menu-tasks-validate.png)</details>
+    <details><summary>View Screenshot Menu Task Choice</summary>
+    <img src="./documents/menu-tasks-validate.png" alt="menu task choice screenshot" width="400"/>
+    </details>
+
 - **Test Case 2: Logout**
   - Ensure the user is returned to the login screen when selecting the 'Logout' option.
-  <details><summary>View Screenshot Logout </summary>![ Logout screenshoot](./documents/logout.png)</details>
+    <details><summary>View Screenshot Logout</summary>
+    <img src="./documents/logout.png" alt="logout screenshot" width="400"/>
+    </details>
 
 #### Enter Task
 - **Test Case 1: Add Task with Valid Inputs**
   - Add a task with all required fields (name, due date, priority, category, description, status) filled correctly.
   - Ensure the task is successfully added to the appropriate category.
-  <details><summary>View Screenshot Add Task Succssufully </summary>![ add task successufully screenshoot](./documents/add-task.png)</details>
-- **Test Case 2: Invalid Task Name**
-  - Attempt to add a task with an invalid name (less than 5 characters, can't be onlu numeric or empty).
-  - Verify that an appropriate error message is displayed and the user is prompted to re-enter the task name.
-  <details><summary>View Screenshot Invalid Task Name </summary>![ add task successufully screenshoot](./documents/add-task.png)</details>
+    <details><summary>View Screenshot Add Task Successfully</summary>
+    <img src="./documents/add-task.png" alt="add task successfully screenshot" width="400"/>
+    </details>
 
-#### Enter Task
+- **Test Case 2: Invalid Task Name**
+  - Attempt to add a task with an invalid name (less than 5 characters, can't be only numeric or empty).
+  - Verify that an appropriate error message is displayed and the user is prompted to re-enter the task name.
+    <details><summary>View Screenshot Invalid Task Name</summary>
+    <img src="./documents/add-task.png" alt="invalid task name screenshot" width="400"/>
+    </details>
+
 - **Test Case 3: Invalid Due Date Format**
   - Attempt to add a task with an incorrect due date format.
   - Verify that an appropriate error message is displayed and the user is prompted to re-enter the due date.
-  <details><summary>View Screenshot Invalid due_date task </summary>![ invalid due_date task inputs screenshoot](./documents/invalid-due_date-task.png)</details>
+    <details><summary>View Screenshot Invalid Due Date</summary>
+    <img src="./documents/invalid-due_date-task.png" alt="invalid due date screenshot" width="400"/>
+    </details>
+
 - **Test Case 4: Invalid Priority**
   - Attempt to add a task with an invalid priority value.
   - Verify that an appropriate error message is displayed and the user is prompted to re-enter the priority.
-  <details><summary>View Screenshot Invalid priority task </summary>![ invalid priority task inputs screenshoot](./documents/invalid-priority-task.png)</details>
-- **Test Case 5: Invalid Category**
-  - Attempt to add a task with an invalid category value.
-  - Verify that an appropriate error message is displayed and the user is prompted to re-enter the category.
-  <details><summary>View Screenshot Invalid category task </summary>![ invalid category task inputs screenshoot](./documents/invalid-category-task.png)</details>
-- **Test Case 6: Invalid Description Length**
-  - Attempt to add a task with a description longer than 50 characters.
-  - Verify that an appropriate error message is displayed and the user is prompted to re-enter the description.
-- **Test Case 7: Invalid Status**
-  - Attempt to add a task with an invalid status value.
-  - Verify that an appropriate error message is displayed and the user is prompted to re-enter the status.
-  <details><summary>View Screenshot Invalid status task </summary>![ invalid status task inputs screenshoot](./documents/invalid-category-task.png)</details>
+    <details><summary>View Screenshot Invalid Priority</summary>
+    <img src="./documents/invalid-priority-task.png" alt="invalid priority screenshot" width="400"/>
+    </details>
 
-#### Next Choice
-- **Test Case 1: Add More Tasks**
-  - Ensure that after adding a task, the user is prompted task was added, and back to Task Menu.
-  - Validate that choosing to add more tasks loops back to the task entry process.
-  <details><summary>View Screenshot Invalid Task add / Back to Task Menu  </summary>![task add / task Menu screenshoot](./documents/task-add.png)</details>
-- **Test Case 2: Return to Main Menu**
-  - Ensure that choosing to return to the main menu correctly navigates the user back to the main menu options.
-  <details><summary>View Screenshot Back to Main Menu  </summary>![ return to main menu screenshoot](./documents/logout.png)</details>
-
-#### Edit Tasks
-- **Test Case 1: Validate Task ID in Google Sheets**
-  - Verify that when a user attempts to update a task, they must provide a valid Task ID.
-  - If the Task ID does not exist in the user's tasks (either 'Personal' or 'Business' categories), an error message should be displayed: `"Task ID '<entered_id>' does not exist."`.
-  - Ensure that the function gracefully handles empty input, showing the message: `"Task ID cannot be empty."`.
-  - Validate that entering "quit" returns the user to the previous menu without attempting to update any tasks.
-  <details><summary>View Screenshot - Task ID Validation</summary>![Task ID validation screenshot](./documents/wrong-task_id.png)</details>
 #### Analyse Tasks
 - **Test Case 1: Sort by Name**
   - Sort tasks by name and verify that tasks are displayed in alphabetical order.
     - At Task Menu; user can choose to View All Task; and if is more than one task has the option to choose if wants to sort the tasks:
-    <details><summary>View Screenshot Sort Task by name  </summary>![ Sort Task by name screenshoot](./documents/sort-name.png)</details>
+    <details><summary>View Screenshot Sort Task by name</summary>
+    <img src="documents/sort-name.png" alt="sort by name screenshot" width="400"/>
+    </details>
+
 
 - **Test Case 2: Sort by Due Date**
   - Sort tasks by due date and verify that tasks are displayed in chronological order.
-  <details><summary>View Screenshot Sort Task by due_date  </summary>![ Sort Task by due_date screenshoot](./documents/sort-due_date.png)</details>
+  <details><summary>View Screenshot Sort Task by date</summary>
+    <img src="documents/sort-due_date.png" alt="sort by due_date screenshot" width="400"/>
+    </details>
   
 - **Test Case 3: Sort by Priority**
   - Sort tasks by priority and verify that tasks are displayed in the correct order (high, medium, low).
-   <details><summary>View Screenshot Sort Task by priority  </summary>![ Sort Task by priority screenshoot](./documents/sort-priority.png)</details>
+   <details><summary>View Screenshot Sort Task by priority</summary>
+    <img src="documents/sort-priority.png" alt="sort by priority screenshot" width="400"/>
+    </details>
 
 - **Test Case 4: Sort by Status**
   - Sort tasks by status and verify that tasks are displayed in the correct order (In Progress, Pending,  Complete).
-  <details><summary>View Screenshot Sort Task by status  </summary>![ Sort Task by status screenshoot](./documents/sort-status.png)</details>
-
+  <details><summary>View Screenshot Sort Task by status</summary>
+    <img src="documents/sort-status.png" alt="sort by status screenshot" width="400"/>
+    </details>
 - **Test Case 5: Sort Tasks Input**
   - Validate input, for error handling to correct user option:
-  <details><summary>View Screenshot Sort Task Validate Input  </summary>![ Sort Task Validate Input  screenshoot](./documents/sort-input.png)</details>
-
+  <details><summary>View Screenshot Sort Task Validate Input</summary>
+    <img src="documents/sort-input.png" alt="sort Task Validate Input screenshot" width="400"/>
+    </details>
 
 #### View Tasks
 - **Test Case 1: Display All Tasks**
   - View all tasks and verify that tasks are displayed with all details including name, due date, priority, category, description, and status.
   - Ensure tasks are correctly grouped by category (Personal, Business).
-  <details><summary>View Screenshot View All Tasks   </summary>![ View All tasks screenshoot](./documents/view-taks.png)</details>
-  
+  <details><summary>View Screenshot Sort Task Validate Input</summary>
+    <img src="documents/view-taks.png" alt="view tasks screenshot" width="400"/>
+    </details>
 - **Test Case 2: No Tasks**
   - Verify that an appropriate message is displayed if there are no tasks to view, same message in the case when no task to: Edit Task or Remove Task
-<details><summary>View Screenshot View All Tasks - No Task handling  </summary>![ no Tasks screenshoot](./documents/no-tasks.png)</details>
+<details><summary>View Screenshot Sort Task Validate Input</summary>
+    <img src="documents/no-tasks.png" alt="no tasks screenshot" width="400"/>
+    </details>
 
-#### Code Validation
-**Flake8** validation was utilized to ensure that each `.py` file followed PEP 8 coding standards. This helped maintain clean, consistent, and error-free code throughout the project.
-<details><summary>View Screenshot Flake8 Validator  </summary>![ linter screenshoot](./documents/flake.jpg)</details>
+### Code Validation
+- **Flake8** validation was utilized to ensure that each `.py` file followed PEP 8 coding standards. This helped maintain clean, consistent, and error-free code throughout the project.
+  <details><summary>View Screenshot Flake8 Validation</summary>
+  <img src="documents/flake.jpg" alt="flake8 validation screenshot" width="400"/>
+  </details>
 
-**Code Institute Python Linter** validate  on this plataform as well.
-<details><summary>View Screenshot Linter Validator  </summary>![ linter screenshoot](./documents/linter.png)</details>
+- **Code Institute Python Linter** was used to validate the code on their platform.
+  <details><summary>View Screenshot Linter Validation</summary>
+  <img src="documents/linter.png" alt="linter validation screenshot" width="400"/>
+  </details>
 
-### Future Features
+## Future Features
 - Implement automated tests using unittest or pytest.
 - Extend test coverage to include edge cases and performance testing.
 - Integrated Google Calendar API
 
 
-### Bugs Encountered
+## Bugs Encountered
 
 - **1. Line Length Violations (E501) with Flake8**:
   - **Issue**: Multiple instances of lines exceeding 79 characters were flagged during code linting with Flake8.
@@ -313,7 +380,7 @@ All features were manually tested to ensure they work as expected. Below are the
   - **Lesson Learned**: Proactive error handling ensures that users receive informative feedback and the application remains stable even with unexpected inputs.
 
 
-### Deployment
+## Deployment
 
 - **Visual Studio and Git**
   - I created a repository in GitHub for this project and used the Visual Studio terminal for development.
