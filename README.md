@@ -213,10 +213,15 @@ All features were manually tested to ensure they work as expected. Below are the
   - Register with a new username and password that meet the length requirements (at least 5 characters).
   - Ensure the user is successfully registered and redirected to the task menu.
   - In all cases, an appropriate error message is displayed to inform the user.
-
+<details><summary>View Screenshot Username Exists</summary>
+    <img src="documents/register.png" alt="register user screenshot" width="400"/>
+    </details>
 - **Test Case 2: Username Length Validation**
   - Attempt to register with a username shorter than 5 characters.
   - Verify that an appropriate error message is displayed and the user is prompted to re-enter the username.
+  <details><summary>View Screenshot Username Exists</summary>
+    <img src="documents/username-test.png" alt="username inputs tests screenshot" width="400"/>
+    </details>
 
 - **Test Case 3: Existing Username Conflict**
   - Attempt to register with a username that already exists.
