@@ -155,7 +155,7 @@ def validate_description(
                 return None
             if len(description) > 300:
                 raise ValueError(
-                    f"{Fore.RED}Exceeded the input. Maximum characters allowed: 50"
+                    f"{Fore.RED}Exceeded the input. Maximum characters allowed: 300"
                 )
 
             return description

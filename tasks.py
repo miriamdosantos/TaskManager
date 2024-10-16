@@ -112,7 +112,7 @@ def list_tasks(username, users):
 
     if total_tasks == 0:
         print(
-            f"{Fore.RED} +  {username}, No tasks found at the moment"
+            f"{Fore.RED}  {username}, No tasks found at the moment"
         )
         return total_tasks  # Return count
 
